@@ -21,27 +21,29 @@ class ClassifierNet(nn.Module):
     def __init__(self, img_rows, img_cols):
         super(ClassifierNet, self).__init__()
 
-        self.conv1 = nn.Conv2d(in_channels = 3,out_channels = 32, kernel_size = 6, stride= 3, padding= 2)
-        self.pool1 = nn.MaxPool2d(3,2, padding= 1)
-        self.conv2 = nn.Conv2d(in_channels = 32 ,out_channels = 96, kernel_size = 3, stride= 2, padding= 1)
+        self.conv1 = nn.Conv2d(in_channels = 3,out_channels = 24, kernel_size = 11, stride= 3, padding= 2)
+        self.pool1 = nn.MaxPool2d(2,1, padding= 1)
+        self.conv2 = nn.Conv2d(in_channels = 24 ,out_channels = 48, kernel_size = 3, stride= 1, padding= 1)
         self.pool2 = nn.MaxPool2d(2,2, padding= 1)
-        self.conv3 = nn.Conv2d(in_channels = 96 ,out_channels = 192, kernel_size = 3, stride= 2, padding= 1)
+        self.conv3 = nn.Conv2d(in_channels = 48 ,out_channels = 96, kernel_size = 3, stride= 1, padding= 1)
         self.pool3 = nn.MaxPool2d(2,2, padding= 1)
         """ CONV DIMENSIONS CALCULATIONS """
-        self.conv_output_H = calculate_conv_output(img_rows, 6, 2, 3)
-        self.conv_output_W = calculate_conv_output(img_cols, 6, 2, 3)
+        self.conv_output_H = calculate_conv_output(img_rows, 11, 2, 3)
+        self.conv_output_W = calculate_conv_output(img_cols, 11, 2, 3)
         """ POOLING DIMENSIONS CALCULATIONS """
-        self.conv_output_H = calculate_conv_output(self.conv_output_H , 3, 1, 2)
-        self.conv_output_W = calculate_conv_output(self.conv_output_W , 3, 1, 2)
+        self.conv_output_H = calculate_conv_output(self.conv_output_H , 2, 1, 1)
+        self.conv_output_W = calculate_conv_output(self.conv_output_W , 2, 1, 1)
         
         for _ in range(2):
-            self.conv_output_H = calculate_conv_output(self.conv_output_H , 3, 1, 2)
-            self.conv_output_W = calculate_conv_output(self.conv_output_W , 3, 1, 2)
+            """ CONV DIMENSIONS CALCULATIONS """
+            self.conv_output_H = calculate_conv_output(self.conv_output_H , 3, 1, 1)
+            self.conv_output_W = calculate_conv_output(self.conv_output_W , 3, 1, 1)
+            """ POOLING DIMENSIONS CALCULATIONS """
             self.conv_output_H = calculate_conv_output(self.conv_output_H , 2, 1, 2)
             self.conv_output_W = calculate_conv_output(self.conv_output_W , 2, 1, 2)
         
         self.linear = nn.Sequential(
-            torch.nn.Linear(calculate_flat_input(1, self.conv_output_H, self.conv_output_W)*192,  512), nn.ReLU(True),
+            torch.nn.Linear(calculate_flat_input(1, self.conv_output_H, self.conv_output_W)*96,  512), nn.ReLU(True),
             nn.Dropout(), nn.Linear(512, 5),
             )
 
@@ -54,14 +56,14 @@ class ClassifierNet(nn.Module):
         x=self.pool2(x)
         x = F.relu(self.conv3(x.float()))
         x=self.pool3(x)
-        x = x.view(-1, calculate_flat_input(1, self.conv_output_H, self.conv_output_W)*192)
+        x = x.view(-1, calculate_flat_input(1, self.conv_output_H, self.conv_output_W)*96)
         x= self.linear(x)
         return x
 
 class Classifier:
     def __init__(self, learning_rate, batch_size):
         self.image_size = (320, 240)
-        self.model = ClassifierNet(self.image_size[0],self.image_size[0])
+        self.model = ClassifierNet(self.image_size[0],self.image_size[1])
         tulip =  glob.glob("Flowers/tulip/*")
         sunflower =  glob.glob("Flowers/sunflower/*")
         rose =  glob.glob("Flowers/rose/*")
@@ -137,7 +139,7 @@ class Classifier:
             
             imagePath = np.random.choice(self.paths[group])
             # load the image, pre-process it, and store it in the data list
-            im = Image.open(imagePath)
+            im = Image.open(imagePath)  
             im.thumbnail(self.image_size, Image.ANTIALIAS)
             im = np.array(im)
             im = cv2.resize(im, self.image_size) 
