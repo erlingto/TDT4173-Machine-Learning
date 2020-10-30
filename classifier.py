@@ -18,7 +18,7 @@ def calculate_flat_input(dim_1, dim_2, dim_3):
 
 class ClassifierNet(nn.Module):
 
-    def __init__(self, img_rows, img_cols):
+    def __init__(self, img_rows, img_cols, dropout):
         super(ClassifierNet, self).__init__()
 
         self.conv1 = nn.Conv2d(in_channels = 3,out_channels = 24, kernel_size = 3, stride= 1, padding= 0)
@@ -29,28 +29,41 @@ class ClassifierNet(nn.Module):
         self.pool3 = nn.MaxPool2d(2,2, padding= 0)
         self.conv4 = nn.Conv2d(in_channels = 96 ,out_channels = 192, kernel_size = 3, stride= 1, padding= 0)
         self.pool4 = nn.MaxPool2d(2,2, padding= 0)
-        self.conv5 = nn.Conv2d(in_channels = 192 ,out_channels = 300, kernel_size = 3, stride= 1, padding= 0)
+        self.conv5 = nn.Conv2d(in_channels = 192 ,out_channels = 350, kernel_size = 3, stride= 1, padding= 0)
         self.pool5 = nn.MaxPool2d(2,2, padding= 0)
         """ CONV DIMENSIONS CALCULATIONS """
         self.conv_output_H = img_rows
         self.conv_output_W = img_cols
+        
 
-        for _ in range(5):
+        for _ in range(4):
             """ CONV DIMENSIONS CALCULATIONS """
             self.conv_output_H = calculate_conv_output(self.conv_output_H , 3, 0, 1)
             self.conv_output_W = calculate_conv_output(self.conv_output_W , 3, 0, 1)
             """ POOLING DIMENSIONS CALCULATIONS """
             self.conv_output_H = calculate_conv_output(self.conv_output_H , 2, 0, 2)
             self.conv_output_W = calculate_conv_output(self.conv_output_W , 2, 0, 2)
-        
 
-        print(self.conv_output_W)
+        self.conv_output_H = calculate_conv_output(self.conv_output_H , 3, 0, 1)
+        self.conv_output_W = calculate_conv_output(self.conv_output_W , 3, 0, 1)
+        """ POOLING DIMENSIONS CALCULATIONS """
+        self.conv_output_H = calculate_conv_output(self.conv_output_H , 2, 0, 2)
+        self.conv_output_W = calculate_conv_output(self.conv_output_W , 2, 0, 2)
         print(self.conv_output_H)
+        print(self.conv_output_W)
 
-        self.linear = nn.Sequential(
-            torch.nn.Linear(calculate_flat_input(1, self.conv_output_H, self.conv_output_W)*300,  1024), nn.ReLU(True),
-            nn.Dropout(), nn.Linear(1024, 5),
-            )
+        if dropout:
+            self.linear = nn.Sequential(
+                torch.nn.Linear(calculate_flat_input(1, self.conv_output_H, self.conv_output_W)*350,  1024), nn.ReLU(True),
+                nn.Dropout(),
+                nn.Linear(1024, 5),
+                )
+        else:
+            self.linear = nn.Sequential(
+                torch.nn.Linear(calculate_flat_input(1, self.conv_output_H, self.conv_output_W)*350,  1024), nn.ReLU(True),
+                nn.Dropout(0),
+                nn.Linear(1024, 5),
+                )
 
         
 
@@ -65,14 +78,14 @@ class ClassifierNet(nn.Module):
         x=self.pool4(x)
         x = F.relu(self.conv5(x.float()))
         x=self.pool5(x)
-        x = x.view(-1, calculate_flat_input(1, self.conv_output_H, self.conv_output_W)*300)
+        x = x.view(-1, calculate_flat_input(1, self.conv_output_H, self.conv_output_W)*350)
         x= self.linear(x)
         return x
 
 class Classifier:
-    def __init__(self, learning_rate, batch_size):
-        self.image_size = (224, 224)
-        self.model = ClassifierNet(self.image_size[0],self.image_size[1])
+    def __init__(self, learning_rate, batch_size, dropout):
+        self.image_size = (180, 180)
+        self.model = ClassifierNet(self.image_size[0],self.image_size[1], dropout)
         tulip =  glob.glob("Flowers/tulip/*")
         sunflower =  glob.glob("Flowers/sunflower/*")
         rose =  glob.glob("Flowers/rose/*")
@@ -208,11 +221,13 @@ class Classifier:
                                         (correct / self.batch_size) * 100))
                 self.reset_batches()
                 self.load_images()
+            if epoch%5 == 0:
+                evaluation(self, 100, False)
             self.reset_epoch()
 
         self.save_weights("Classifier")
 
-def evaluation(Classifier, test_batch_size):
+def evaluation(Classifier, test_batch_size, prnt):
     tulip =  glob.glob("Test_Flowers/tulip/*")
     sunflower =  glob.glob("Test_Flowers/sunflower/*")
     rose =  glob.glob("Test_Flowers/rose/*")
@@ -235,7 +250,7 @@ def evaluation(Classifier, test_batch_size):
             im = im.transpose(0,-1)
             im = im[None, :, :]
 
-            while im.size() != torch.Size([1, 3, 224, 224]):
+            while im.size() != torch.Size([1, 3, 180, 180]):
                 imagePath = np.random.choice(paths[group])
                 # load the image, pre-process it, and store it in the data list
                 im = Image.open(imagePath)
@@ -266,13 +281,13 @@ def evaluation(Classifier, test_batch_size):
             
             counter+= 1
     
-    print("Cross validation:")
+    
     correct = 0
     total = 0
 
     errors = np.zeros(5)
     for i in range(test_batch_size*5):
-        output = DClassifier.model(batch_images[str(i)]).detach()
+        output = Classifier.model(batch_images[str(i)]).detach()
         predicted = np.argmax(output)
         label = batch_labels[str(i)]
         label = np.argmax(torch.Tensor([label]))
@@ -299,24 +314,24 @@ def evaluation(Classifier, test_batch_size):
         
         total += 1
     print("Cross validation:",correct/(total))
-    print("The agent managed", correct, "out of a total of:", total)        
-    print("Errors in daisy images:", errors[0], "out of", test_batch_size)
-    print("Errors in dandelion images:", errors[1], "out of", test_batch_size)
-    print("Errors in rose images:", errors[2], "out of", test_batch_size)
-    print("Errors in sunflower images:", errors[3], "out of", test_batch_size)
-    print("Errors in tulip images:", errors[4], "out of", test_batch_size)
+    print("The agent managed", correct, "out of a total of:", total)      
+    if prnt:  
+        print("Errors in daisy images:", errors[0], "out of", test_batch_size)
+        print("Errors in dandelion images:", errors[1], "out of", test_batch_size)
+        print("Errors in rose images:", errors[2], "out of", test_batch_size)
+        print("Errors in sunflower images:", errors[3], "out of", test_batch_size)
+        print("Errors in tulip images:", errors[4], "out of", test_batch_size)
 
 
-    print ("-----------------------ERRORS-----------------------")
-    for error in error_results:
-        print(error ,":", error_results[error])
+        print ("-----------------------ERRORS-----------------------")
+        for error in error_results:
+            print(error ,":", error_results[error])
 
-DClassifier = Classifier(0.000546, 32)
-evaluation(DClassifier, 25)
-DClassifier.load_images()
-DClassifier.train(10, 32)
-DClassifier.load_weights("classifier")
-evaluation(DClassifier, 25)
+
+TClassifier = Classifier(0.000134, 32, True)
+TClassifier.load_images()
+TClassifier.train(60 , 32)
+evaluation(TClassifier, 100, True)
 
 #DClassifier.load_images()
 
