@@ -115,8 +115,33 @@ class Classifier:
         return im
  
     #TODO implement image visualizations
-    def view_image(self, im):
-        return im
+    def view_image(self):
+        groups = list(self.paths.keys())
+        group = random.choice(groups)
+        
+        imagePath = np.random.choice(self.paths[group])
+        im = Image.open(imagePath)
+        im.thumbnail(self.image_size, Image.ANTIALIAS)
+        im = np.array(im)
+        #TODO resize without converting to numpy array?
+        im = cv2.resize(im, self.image_size) 
+        im = torch.from_numpy(im)
+        im = im.transpose(0,-1)
+        im = im[None, :, :]
+        x = im
+        x = F.relu(self.model.conv1(x.float()))
+        x=self.model.pool1(x)
+        x = F.relu(self.model.conv2(x.float()))
+        x=self.model.pool2(x)
+        x = F.relu(self.model.conv3(x.float()))
+        x=self.model.pool3(x)
+        x = F.relu(self.model.conv4(x.float()))
+        x=self.model.pool4(x)
+        x = x.detach().numpy()
+        
+        image = Image.fromarray(x[0][1], "RGB")
+        image.show()
+        return image
     
     #TODO implement capsule net
     def capsulenet(self):
@@ -337,13 +362,13 @@ def evaluation(Classifier, test_batch_size, prnt):
 
 
 #TODO Hyperparameters 
-image_size = (224, 224)
+image_size = (180, 180)
 learning_rate = 0.000134
 mini_batch_size = 32
 TClassifier = Classifier(learning_rate, mini_batch_size, image_size, True)
-TClassifier.load_images()
+#TClassifier.load_images()
 TClassifier.load_weights('classifier')
-TClassifier.train(60 , 32)
+TClassifier.view_image()
 #TClassifier = Classifier(0.000134, 32, False)
 #TClassifier.load_weights('classifier')
 evaluation(TClassifier, 100, True)
