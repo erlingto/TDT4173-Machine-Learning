@@ -20,7 +20,11 @@ class ClassifierNet(nn.Module):
 
     def __init__(self, img_rows, img_cols, dropout):
         super(ClassifierNet, self).__init__()
-
+        if torch.cuda.is_available():
+            self.device = torch.device("cuda:0")
+            print("Cuda available")
+        else:
+            self.device = torch.device("cpu")
         self.conv1 = nn.Conv2d(in_channels = 3,out_channels = 24, kernel_size = 3, stride= 1, padding= 0)
         self.pool1 = nn.MaxPool2d(2,2, padding= 0)
         self.conv2 = nn.Conv2d(in_channels = 24 ,out_channels = 48, kernel_size = 3, stride= 1, padding= 0)
@@ -64,9 +68,7 @@ class ClassifierNet(nn.Module):
                 nn.Dropout(0),
                 nn.Linear(1024, 5),
                 )
-
-        
-
+    
     def forward(self, x):
         x = F.relu(self.conv1(x.float()))
         x=self.pool1(x)
@@ -84,21 +86,21 @@ class ClassifierNet(nn.Module):
 
 class Classifier:
     def __init__(self, learning_rate, batch_size, dropout):
-        self.image_size = (180, 180)
+        self.image_size = (224, 224)
         self.model = ClassifierNet(self.image_size[0],self.image_size[1], dropout)
         tulip =  glob.glob("Flowers/tulip/*")
         sunflower =  glob.glob("Flowers/sunflower/*")
         rose =  glob.glob("Flowers/rose/*")
         dandelion =  glob.glob("Flowers/dandelion/*")
         daisy =  glob.glob("Flowers/daisy/*")
+        self.paths = {"tulip": tulip, "sunflower": sunflower, "rose": rose, "dandelion": dandelion, "daisy": daisy}
 
         self.batch_size = batch_size
-
         self.learning_rate = learning_rate
         self.optimizer = optim.Adam(self.model.parameters() ,lr = learning_rate)
         self.criterion = nn.MSELoss()
 
-        self.paths = {"tulip": tulip, "sunflower": sunflower, "rose": rose, "dandelion": dandelion, "daisy": daisy}
+        
         self.batch_images = {}
         self.batch_labels = {}
         self.batch_path = {}
@@ -118,22 +120,23 @@ class Classifier:
 
         self.paths = {"tulip": tulip, "sunflower": sunflower, "rose": rose, "dandelion": dandelion, "daisy": daisy}
 
-    def predict(self, image):
-        return self.model(image)
-
     def load_weights(self, path):
         self.model.load_state_dict(torch.load(path))
         self.name = path
 
     def save_weights(self, path):
         torch.save(self.model.state_dict(), path)
+    
+    def predict(self, image):
+        return self.model(image)
+
 
     def predict_test(self, imagePath):
         im = Image.open(imagePath)
         im.thumbnail(self.image_size, Image.ANTIALIAS)
         im = np.array(im)
         im = cv2.resize(im, self.image_size) 
-        im = torch.from_numpy(im)
+        im = torch.from_numpy(im).cuda()
         im = im.transpose(0,-1)
         im = im[None, :, :]
 
@@ -164,10 +167,12 @@ class Classifier:
             im = Image.open(imagePath)  
             im.thumbnail(self.image_size, Image.ANTIALIAS)
             im = np.array(im)
+            #TODO resize without converting to numpy array?
             im = cv2.resize(im, self.image_size) 
-            im = torch.from_numpy(im)
+            im = torch.from_numpy(im).cuda().to(self.device)
+            #TODO implement transpose, rotate, etc, randomly
             im = im.transpose(0,-1)
-            im = im[None, :, :]
+            im = im[None, 224, 224]
 
             label = np.zeros(5)
 
@@ -195,10 +200,11 @@ class Classifier:
                 correct = 0
                 for i in range(self.batch_size):
                     # Run the forward pass
-                    output = self.model(self.batch_images[str(i)])
-
+                    im = self.batch_images[str(i)]
+                    output = self.model(im)
                     label = self.batch_labels[str(i)]
                     label = torch.Tensor([label])
+                    #TODO change to tensor in load_images
                     loss = self.criterion(output, label)
                     loss_list.append(loss.item())
 
@@ -206,8 +212,6 @@ class Classifier:
                     self.optimizer.zero_grad()
                     loss.backward()
                     self.optimizer.step()
-
-                
 
                     # Track the accuracy
                     predicted = torch.round(output.data[0])
@@ -249,17 +253,6 @@ def evaluation(Classifier, test_batch_size, prnt):
             im = torch.from_numpy(im)
             im = im.transpose(0,-1)
             im = im[None, :, :]
-
-            while im.size() != torch.Size([1, 3, 180, 180]):
-                imagePath = np.random.choice(paths[group])
-                # load the image, pre-process it, and store it in the data list
-                im = Image.open(imagePath)
-                im.thumbnail(Classifier.image_size, Image.ANTIALIAS)
-                im = np.array(im)
-                im = cv2.resize(im, Classifier.image_size) 
-                im = torch.from_numpy(im)
-                im = im.transpose(0,-1)
-                im = im[None, :, :]
 
             label = np.zeros(5)
 
@@ -328,9 +321,14 @@ def evaluation(Classifier, test_batch_size, prnt):
             print(error ,":", error_results[error])
 
 
-TClassifier = Classifier(0.000134, 32, True)
+learning_rate = 0.000134
+mini_batch_size = 32
+TClassifier = Classifier(learning_rate, mini_batch_size, True)
 TClassifier.load_images()
+TClassifier.load_weights('classifier')
 TClassifier.train(60 , 32)
+#TClassifier = Classifier(0.000134, 32, False)
+#TClassifier.load_weights('classifier')
 evaluation(TClassifier, 100, True)
 
 #DClassifier.load_images()
