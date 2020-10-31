@@ -321,6 +321,8 @@ def evaluation(Classifier, test_batch_size, prnt):
             print(error ,":", error_results[error])
 
 
+#TODO Hyperparameters 
+
 learning_rate = 0.000134
 mini_batch_size = 32
 TClassifier = Classifier(learning_rate, mini_batch_size, True)
