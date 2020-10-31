@@ -85,8 +85,8 @@ class ClassifierNet(nn.Module):
         return x
 
 class Classifier:
-    def __init__(self, learning_rate, batch_size, dropout):
-        self.image_size = (224, 224)
+    def __init__(self, learning_rate, batch_size, image_size, dropout):
+        self.image_size = image_size
         self.model = ClassifierNet(self.image_size[0],self.image_size[1], dropout)
         tulip =  glob.glob("Flowers/tulip/*")
         sunflower =  glob.glob("Flowers/sunflower/*")
@@ -110,6 +110,21 @@ class Classifier:
         self.batch_labels = {}
         self.batch_path = {}
 
+    #TODO implement randomized image augmentation
+    def image_augmentation(self, im):
+        return im
+ 
+    #TODO implement image visualizations
+    def view_image(self, im):
+        return im
+    
+    #TODO implement capsule net
+    def capsulenet(self):
+        return None
+
+    #TODO plot loss, cross validation
+        def plot_results(self):
+            return None
 
     def reset_epoch(self): 
         tulip =  glob.glob("Flowers/tulip/*")
@@ -322,10 +337,10 @@ def evaluation(Classifier, test_batch_size, prnt):
 
 
 #TODO Hyperparameters 
-
+image_size = (224, 224)
 learning_rate = 0.000134
 mini_batch_size = 32
-TClassifier = Classifier(learning_rate, mini_batch_size, True)
+TClassifier = Classifier(learning_rate, mini_batch_size, image_size, True)
 TClassifier.load_images()
 TClassifier.load_weights('classifier')
 TClassifier.train(60 , 32)
