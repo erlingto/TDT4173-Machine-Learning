@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="c92f0fa2-8932-4471-9c54-35296b6b1370" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/classifier.py" beforeDir="false" afterPath="$PROJECT_DIR$/classifier.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/gitignore" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -40,13 +40,13 @@
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="Python Console" value="19" />
-          <entry key="gitignore" value="1" />
+          <entry key="gitignore" value="33" />
           <entry key="py" value="962" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="PLAIN_TEXT" value="1" />
+          <entry key="PLAIN_TEXT" value="33" />
           <entry key="Python" value="981" />
         </counts>
       </usages-collector>
@@ -54,26 +54,26 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/classifier.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="756">
-              <caret line="154" column="16" selection-start-line="154" selection-start-column="16" selection-end-line="154" selection-end-column="16" />
+            <state relative-caret-position="135">
+              <caret line="152" column="23" selection-start-line="152" selection-start-column="23" selection-end-line="152" selection-end-column="23" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
                 <element signature="e#9649#11158#0" />
                 <element signature="e#11256#14458#0" />
-                <marker date="1604251112088" expanded="true" signature="9742:9751" ph="..." />
+                <marker date="1604251194520" expanded="true" signature="9742:9751" ph="..." />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/gitignore">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-39">
-              <caret line="106" column="14" lean-forward="true" selection-start-line="106" selection-start-column="14" selection-end-line="106" selection-end-column="14" />
+            <state relative-caret-position="767">
+              <caret line="140" column="6" selection-start-line="140" selection-start-column="6" selection-end-line="140" selection-end-column="6" />
             </state>
           </provider>
         </entry>
@@ -84,6 +84,7 @@
     <findStrings>
       <find>device</find>
       <find>NO CUDA</find>
+      <find>NO C</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -92,8 +93,8 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/gitignore" />
         <option value="$PROJECT_DIR$/classifier.py" />
+        <option value="$PROJECT_DIR$/gitignore" />
       </list>
     </option>
   </component>
@@ -256,23 +257,23 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/gitignore">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-39">
-          <caret line="106" column="14" lean-forward="true" selection-start-line="106" selection-start-column="14" selection-end-line="106" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/classifier.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="756">
-          <caret line="154" column="16" selection-start-line="154" selection-start-column="16" selection-end-line="154" selection-end-column="16" />
+        <state relative-caret-position="135">
+          <caret line="152" column="23" selection-start-line="152" selection-start-column="23" selection-end-line="152" selection-end-column="23" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
             <element signature="e#9649#11158#0" />
             <element signature="e#11256#14458#0" />
-            <marker date="1604251112088" expanded="true" signature="9742:9751" ph="..." />
+            <marker date="1604251194520" expanded="true" signature="9742:9751" ph="..." />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="767">
+          <caret line="140" column="6" selection-start-line="140" selection-start-column="6" selection-end-line="140" selection-end-column="6" />
         </state>
       </provider>
     </entry>
