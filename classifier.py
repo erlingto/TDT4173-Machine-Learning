@@ -272,7 +272,8 @@ class Classifier:
                     im = self.batch_images[str(i)]
                     output = self.model(im)
                     label = self.batch_labels[str(i)]
-                    label = torch.Tensor([label]).cuda().to(self.device)
+                  #  label = torch.Tensor([label]).cuda().to(self.device)
+                    label = torch.Tensor([label]).to(self.device)
                     #TODO change to tensor in load_images
                     loss = self.criterion(output, label)
                     loss_list.append(loss.item())
@@ -398,9 +399,9 @@ step_size = 32
 epochs = 60
 TClassifier = Classifier(learning_rate, mini_batch_size, image_size, True)
 TClassifier.view_image()
-#TClassifier.load_images()
+TClassifier.load_images()
 #TClassifier.load_weights('classifier')
-#TClassifier.train(epochs, step_size)
+TClassifier.train(epochs, step_size)
 #evaluation(TClassifier, 100, True)
 
 #DClassifier.load_images()
