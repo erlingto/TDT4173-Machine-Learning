@@ -66,7 +66,7 @@ class ClassifierNet(nn.Module):
         if torch.cuda.is_available():
             self.cuda()
         else:
-            print("NO CUDA")
+            print("NO CUDA to activate")
     
     def forward(self, x):
         x = F.relu(self.conv1(x.float()))
@@ -90,6 +90,7 @@ class Classifier:
             print("Cuda available")
         else:
             self.device = torch.device("cpu")
+        print("Selected device is :" + str(self.device))
         self.image_size = image_size
         self.model = ClassifierNet(self.image_size[0],self.image_size[1], dropout)
         tulip =  glob.glob("Flowers/tulip/*")
@@ -121,7 +122,7 @@ class Classifier:
     #TODO implement image visualizations
     def view_image(self):
 
-        #open an image and resize it
+        #open an image, resize it and print it
         groups = list(self.paths.keys())
         group = random.choice(groups)
 
@@ -131,6 +132,8 @@ class Classifier:
         im = np.array(im)
         #TODO resize without converting to numpy array?
         im = cv2.resize(im, self.image_size)
+        image = Image.fromarray(im, "RGB")
+        image.show()
 
         #convert to tensor for processing
         im = torch.from_numpy(im)
@@ -162,8 +165,8 @@ class Classifier:
 
 
     def tensor_to_image(self, tensor):
-        image = tensor.detatch().clone().numpy()
-        image = Image.fromarray(tensor[0][1], "RGB")
+        image = tensor.detach().clone().numpy()
+        image = Image.fromarray(image[0][1], "RGB")
         image.show()
 
     #TODO implement capsule net
@@ -232,7 +235,8 @@ class Classifier:
             im = np.array(im)
             #TODO resize without converting to numpy array?
             im = cv2.resize(im, self.image_size) 
-            im = torch.from_numpy(im).cuda().to(self.device)
+            # im = torch.from_numpy(im).cuda().to(self.device)
+            im = torch.from_numpy(im).to(self.device)
             #TODO implement transpose, rotate, etc, randomly
             im = im.transpose(0,-1)
            
@@ -393,7 +397,8 @@ mini_batch_size = 32
 step_size = 32
 epochs = 60
 TClassifier = Classifier(learning_rate, mini_batch_size, image_size, True)
-TClassifier.load_images()
+TClassifier.view_image()
+#TClassifier.load_images()
 #TClassifier.load_weights('classifier')
 #TClassifier.train(epochs, step_size)
 #evaluation(TClassifier, 100, True)
