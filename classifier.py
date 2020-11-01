@@ -120,33 +120,52 @@ class Classifier:
  
     #TODO implement image visualizations
     def view_image(self):
+
+        #open an image and resize it
         groups = list(self.paths.keys())
         group = random.choice(groups)
-        
+
         imagePath = np.random.choice(self.paths[group])
         im = Image.open(imagePath)
         im.thumbnail(self.image_size, Image.ANTIALIAS)
         im = np.array(im)
         #TODO resize without converting to numpy array?
-        im = cv2.resize(im, self.image_size) 
+        im = cv2.resize(im, self.image_size)
+
+        #convert to tensor for processing
         im = torch.from_numpy(im)
         im = im.transpose(0,-1)
         im = im[None,:, :, :]
         x = im
+
+        #tensor goes to CNN layers and print picture for each layer
         x = F.relu(self.model.conv1(x.float()))
+        Classifier.tensor_to_image(self, x)
         x=self.model.pool1(x)
+        Classifier.tensor_to_image(self, x)
         x = F.relu(self.model.conv2(x.float()))
+        Classifier.tensor_to_image(self, x)
         x=self.model.pool2(x)
+        Classifier.tensor_to_image(self, x)
         x = F.relu(self.model.conv3(x.float()))
+        Classifier.tensor_to_image(self, x)
         x=self.model.pool3(x)
+        Classifier.tensor_to_image(self, x)
         x = F.relu(self.model.conv4(x.float()))
+        Classifier.tensor_to_image(self, x)
         x=self.model.pool4(x)
-        x = x.detach().numpy()
-        
-        image = Image.fromarray(x[0][1], "RGB")
+        Classifier.tensor_to_image(self, x)
+        x = F.relu(self.model.conv5(x.float()))
+        Classifier.tensor_to_image(self, x)
+        x=self.model.pool5(x)
+        Classifier.tensor_to_image(self, x)
+
+
+    def tensor_to_image(self, tensor):
+        image = tensor.detatch().clone().numpy()
+        image = Image.fromarray(tensor[0][1], "RGB")
         image.show()
-        return image
-    
+
     #TODO implement capsule net
     def capsulenet(self):
         return None
@@ -376,8 +395,8 @@ epochs = 60
 TClassifier = Classifier(learning_rate, mini_batch_size, image_size, True)
 TClassifier.load_images()
 #TClassifier.load_weights('classifier')
-TClassifier.train(epochs, step_size)
-evaluation(TClassifier, 100, True)
+#TClassifier.train(epochs, step_size)
+#evaluation(TClassifier, 100, True)
 
 #DClassifier.load_images()
 
