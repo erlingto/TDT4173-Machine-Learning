@@ -20,11 +20,6 @@ class ClassifierNet(nn.Module):
 
     def __init__(self, img_rows, img_cols, dropout):
         super(ClassifierNet, self).__init__()
-        if torch.cuda.is_available():
-            self.device = torch.device("cuda:0")
-            print("Cuda available")
-        else:
-            self.device = torch.device("cpu")
         self.conv1 = nn.Conv2d(in_channels = 3,out_channels = 24, kernel_size = 3, stride= 1, padding= 0)
         self.pool1 = nn.MaxPool2d(2,2, padding= 0)
         self.conv2 = nn.Conv2d(in_channels = 24 ,out_channels = 48, kernel_size = 3, stride= 1, padding= 0)
@@ -68,6 +63,10 @@ class ClassifierNet(nn.Module):
                 nn.Dropout(0),
                 nn.Linear(1024, 5),
                 )
+        if torch.cuda.is_available():
+            self.cuda()
+        else:
+            print("NO CUDA")
     
     def forward(self, x):
         x = F.relu(self.conv1(x.float()))
@@ -86,6 +85,11 @@ class ClassifierNet(nn.Module):
 
 class Classifier:
     def __init__(self, learning_rate, batch_size, image_size, dropout):
+        if torch.cuda.is_available():
+            self.device = torch.device("cuda:0")
+            print("Cuda available")
+        else:
+            self.device = torch.device("cpu")
         self.image_size = image_size
         self.model = ClassifierNet(self.image_size[0],self.image_size[1], dropout)
         tulip =  glob.glob("Flowers/tulip/*")
@@ -127,7 +131,7 @@ class Classifier:
         im = cv2.resize(im, self.image_size) 
         im = torch.from_numpy(im)
         im = im.transpose(0,-1)
-        im = im[None, :, :]
+        im = im[None,:, :, :]
         x = im
         x = F.relu(self.model.conv1(x.float()))
         x=self.model.pool1(x)
@@ -148,8 +152,8 @@ class Classifier:
         return None
 
     #TODO plot loss, cross validation
-        def plot_results(self):
-            return None
+    def plot_results(self):
+        return None
 
     def reset_epoch(self): 
         tulip =  glob.glob("Flowers/tulip/*")
@@ -178,7 +182,7 @@ class Classifier:
         im = cv2.resize(im, self.image_size) 
         im = torch.from_numpy(im).cuda()
         im = im.transpose(0,-1)
-        im = im[None, :, :]
+        im = im[None, :, :, :]
 
         output = self.model(im)
         predicted = (output.data[0])
@@ -212,7 +216,9 @@ class Classifier:
             im = torch.from_numpy(im).cuda().to(self.device)
             #TODO implement transpose, rotate, etc, randomly
             im = im.transpose(0,-1)
-            im = im[None, 224, 224]
+           
+            im = im[None, :, :, :]
+           
 
             label = np.zeros(5)
 
@@ -243,7 +249,7 @@ class Classifier:
                     im = self.batch_images[str(i)]
                     output = self.model(im)
                     label = self.batch_labels[str(i)]
-                    label = torch.Tensor([label])
+                    label = torch.Tensor([label]).cuda().to(self.device)
                     #TODO change to tensor in load_images
                     loss = self.criterion(output, label)
                     loss_list.append(loss.item())
@@ -255,7 +261,7 @@ class Classifier:
 
                     # Track the accuracy
                     predicted = torch.round(output.data[0])
-                    if np.argmax(predicted) == np.argmax(label):
+                    if torch.argmax(predicted) == torch.argmax(label):
                         correct+= 1
                     acc_list.append(correct / self.batch_size)
 
@@ -362,15 +368,15 @@ def evaluation(Classifier, test_batch_size, prnt):
 
 
 #TODO Hyperparameters 
-image_size = (180, 180)
+image_size = (224, 224)
 learning_rate = 0.000134
 mini_batch_size = 32
+step_size = 32
+epochs = 60
 TClassifier = Classifier(learning_rate, mini_batch_size, image_size, True)
-#TClassifier.load_images()
-TClassifier.load_weights('classifier')
-TClassifier.view_image()
-#TClassifier = Classifier(0.000134, 32, False)
+TClassifier.load_images()
 #TClassifier.load_weights('classifier')
+TClassifier.train(epochs, step_size)
 evaluation(TClassifier, 100, True)
 
 #DClassifier.load_images()
