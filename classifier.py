@@ -87,9 +87,11 @@ class Classifier:
     def __init__(self, learning_rate, batch_size, image_size, dropout):
         if torch.cuda.is_available():
             self.device = torch.device("cuda:0")
+            self.cuda = True
             print("Cuda available")
         else:
             self.device = torch.device("cpu")
+            self.cuda = False
         print("Selected device is :" + str(self.device))
         self.image_size = image_size
         self.model = ClassifierNet(self.image_size[0],self.image_size[1], dropout)
@@ -137,6 +139,8 @@ class Classifier:
 
         #convert to tensor for processing
         im = torch.from_numpy(im)
+        if self.cuda:
+            im = im.cuda().to(self.device)
         im = im.transpose(0,-1)
         im = im[None,:, :, :]
         x = im
@@ -165,6 +169,8 @@ class Classifier:
 
 
     def tensor_to_image(self, tensor):
+        if self.cuda:
+            tensor = tensor.cpu()
         image = tensor.detach().clone().numpy()
         image = Image.fromarray(image[0][1], "RGB")
         image.show()
@@ -202,7 +208,7 @@ class Classifier:
         im.thumbnail(self.image_size, Image.ANTIALIAS)
         im = np.array(im)
         im = cv2.resize(im, self.image_size) 
-        im = torch.from_numpy(im).cuda()
+        im = torch.from_numpy(im).cuda().to(self.device)
         im = im.transpose(0,-1)
         im = im[None, :, :, :]
 
@@ -235,8 +241,9 @@ class Classifier:
             im = np.array(im)
             #TODO resize without converting to numpy array?
             im = cv2.resize(im, self.image_size) 
-            # im = torch.from_numpy(im).cuda().to(self.device)
-            im = torch.from_numpy(im).to(self.device)
+            im = torch.from_numpy(im)
+            if self.cuda:
+                im = im.cuda().to(self.device)
             #TODO implement transpose, rotate, etc, randomly
             im = im.transpose(0,-1)
            
@@ -272,8 +279,9 @@ class Classifier:
                     im = self.batch_images[str(i)]
                     output = self.model(im)
                     label = self.batch_labels[str(i)]
-                  #  label = torch.Tensor([label]).cuda().to(self.device)
-                    label = torch.Tensor([label]).to(self.device)
+                    label = torch.Tensor([label])
+                    if self.cuda:
+                        label = label.cuda().to(self.device)
                     #TODO change to tensor in load_images
                     loss = self.criterion(output, label)
                     loss_list.append(loss.item())
@@ -321,8 +329,11 @@ def evaluation(Classifier, test_batch_size, prnt):
             im = np.array(im)
             im = cv2.resize(im, Classifier.image_size) 
             im = torch.from_numpy(im)
+            if Classifier.cuda:
+                im = im.cuda().to(Classifier.device)
             im = im.transpose(0,-1)
             im = im[None, :, :]
+            
 
             label = np.zeros(5)
 
@@ -351,9 +362,9 @@ def evaluation(Classifier, test_batch_size, prnt):
     errors = np.zeros(5)
     for i in range(test_batch_size*5):
         output = Classifier.model(batch_images[str(i)]).detach()
-        predicted = np.argmax(output)
+        predicted = torch.argmax(output)
         label = batch_labels[str(i)]
-        label = np.argmax(torch.Tensor([label]))
+        label = torch.argmax(torch.Tensor([label]))
         
 
         if predicted == label:
@@ -398,8 +409,9 @@ mini_batch_size = 32
 step_size = 32
 epochs = 60
 TClassifier = Classifier(learning_rate, mini_batch_size, image_size, True)
-TClassifier.view_image()
+#TClassifier.view_image()
 TClassifier.load_images()
+evaluation(TClassifier, 100, True)
 #TClassifier.load_weights('classifier')
 TClassifier.train(epochs, step_size)
 #evaluation(TClassifier, 100, True)
