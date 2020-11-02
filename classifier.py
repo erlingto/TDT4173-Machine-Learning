@@ -66,7 +66,7 @@ class ClassifierNet(nn.Module):
         if torch.cuda.is_available():
             self.cuda()
         else:
-            print("NO CUDA")
+            print("NO CUDA to activate")
     
     def forward(self, x):
         x = F.relu(self.conv1(x.float()))
@@ -90,6 +90,7 @@ class Classifier:
             print("Cuda available")
         else:
             self.device = torch.device("cpu")
+        print("Selected device is :" + str(self.device))
         self.image_size = image_size
         self.model = ClassifierNet(self.image_size[0],self.image_size[1], dropout)
         tulip =  glob.glob("Flowers/tulip/*")
@@ -120,33 +121,54 @@ class Classifier:
  
     #TODO implement image visualizations
     def view_image(self):
+
+        #open an image, resize it and print it
         groups = list(self.paths.keys())
         group = random.choice(groups)
-        
+
         imagePath = np.random.choice(self.paths[group])
         im = Image.open(imagePath)
         im.thumbnail(self.image_size, Image.ANTIALIAS)
         im = np.array(im)
         #TODO resize without converting to numpy array?
-        im = cv2.resize(im, self.image_size) 
+        im = cv2.resize(im, self.image_size)
+        image = Image.fromarray(im, "RGB")
+        image.show()
+
+        #convert to tensor for processing
         im = torch.from_numpy(im)
         im = im.transpose(0,-1)
         im = im[None,:, :, :]
         x = im
+
+        #tensor goes to CNN layers and print picture for each layer
         x = F.relu(self.model.conv1(x.float()))
+        Classifier.tensor_to_image(self, x)
         x=self.model.pool1(x)
+        Classifier.tensor_to_image(self, x)
         x = F.relu(self.model.conv2(x.float()))
+        Classifier.tensor_to_image(self, x)
         x=self.model.pool2(x)
+        Classifier.tensor_to_image(self, x)
         x = F.relu(self.model.conv3(x.float()))
+        Classifier.tensor_to_image(self, x)
         x=self.model.pool3(x)
+        Classifier.tensor_to_image(self, x)
         x = F.relu(self.model.conv4(x.float()))
+        Classifier.tensor_to_image(self, x)
         x=self.model.pool4(x)
-        x = x.detach().numpy()
-        
-        image = Image.fromarray(x[0][1], "RGB")
+        Classifier.tensor_to_image(self, x)
+        x = F.relu(self.model.conv5(x.float()))
+        Classifier.tensor_to_image(self, x)
+        x=self.model.pool5(x)
+        Classifier.tensor_to_image(self, x)
+
+
+    def tensor_to_image(self, tensor):
+        image = tensor.detach().clone().numpy()
+        image = Image.fromarray(image[0][1], "RGB")
         image.show()
-        return image
-    
+
     #TODO implement capsule net
     def capsulenet(self):
         return None
@@ -213,7 +235,8 @@ class Classifier:
             im = np.array(im)
             #TODO resize without converting to numpy array?
             im = cv2.resize(im, self.image_size) 
-            im = torch.from_numpy(im).cuda().to(self.device)
+            # im = torch.from_numpy(im).cuda().to(self.device)
+            im = torch.from_numpy(im).to(self.device)
             #TODO implement transpose, rotate, etc, randomly
             im = im.transpose(0,-1)
            
@@ -249,7 +272,8 @@ class Classifier:
                     im = self.batch_images[str(i)]
                     output = self.model(im)
                     label = self.batch_labels[str(i)]
-                    label = torch.Tensor([label]).cuda().to(self.device)
+                  #  label = torch.Tensor([label]).cuda().to(self.device)
+                    label = torch.Tensor([label]).to(self.device)
                     #TODO change to tensor in load_images
                     loss = self.criterion(output, label)
                     loss_list.append(loss.item())
@@ -374,10 +398,11 @@ mini_batch_size = 32
 step_size = 32
 epochs = 120
 TClassifier = Classifier(learning_rate, mini_batch_size, image_size, True)
+TClassifier.view_image()
 TClassifier.load_images()
 #TClassifier.load_weights('classifier')
 TClassifier.train(epochs, step_size)
-evaluation(TClassifier, 100, True)
+#evaluation(TClassifier, 100, True)
 
 #DClassifier.load_images()
 
