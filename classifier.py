@@ -19,6 +19,7 @@ def calculate_flat_input(dim_1, dim_2, dim_3):
 class ClassifierNet(nn.Module):
 
     def __init__(self, img_rows, img_cols, dropout):
+
         super(ClassifierNet, self).__init__()
         self.conv1 = nn.Conv2d(in_channels = 3,out_channels = 24, kernel_size = 3, stride= 1, padding= 0)
         self.pool1 = nn.MaxPool2d(2,2, padding= 0)
@@ -84,7 +85,7 @@ class ClassifierNet(nn.Module):
         return x
 
 class Classifier:
-    def __init__(self, learning_rate, batch_size, image_size, dropout):
+    def __init__(self, learning_rate, batch_size, image_size, dropout, optimizer, criterion):
         if torch.cuda.is_available():
             self.device = torch.device("cuda:0")
             self.cuda = True
@@ -95,6 +96,7 @@ class Classifier:
         print("Selected device is :" + str(self.device))
         self.image_size = image_size
         self.model = ClassifierNet(self.image_size[0],self.image_size[1], dropout)
+        #Todo generalize classifier, take out paths maybe in a data loader function and pass it to classifier
         tulip =  glob.glob("Flowers/tulip/*")
         sunflower =  glob.glob("Flowers/sunflower/*")
         rose =  glob.glob("Flowers/rose/*")
@@ -104,8 +106,8 @@ class Classifier:
 
         self.batch_size = batch_size
         self.learning_rate = learning_rate
-        self.optimizer = optim.Adam(self.model.parameters() ,lr = learning_rate)
-        self.criterion = nn.MSELoss()
+        self.optimizer = optimizer(self.model.parameters() ,lr = learning_rate) #optim.Adam(self.model.parameters() ,lr = learning_rate)
+        self.criterion = criterion #nn.MSELoss()
 
         
         self.batch_images = {}
@@ -183,7 +185,8 @@ class Classifier:
     def plot_results(self):
         return None
 
-    def reset_epoch(self): 
+    def reset_epoch(self):
+        #TODO Generalize reset function
         tulip =  glob.glob("Flowers/tulip/*")
         sunflower =  glob.glob("Flowers/sunflower/*")
         rose =  glob.glob("Flowers/rose/*")
@@ -402,21 +405,31 @@ def evaluation(Classifier, test_batch_size, prnt):
             print(error ,":", error_results[error])
 
 
-#TODO Hyperparameters 
-image_size = (224, 224)
-learning_rate = 0.000134
-mini_batch_size = 32
-step_size = 32
-epochs = 60
-TClassifier = Classifier(learning_rate, mini_batch_size, image_size, True)
-#TClassifier.view_image()
-TClassifier.load_images()
-evaluation(TClassifier, 100, True)
-#TClassifier.load_weights('classifier')
-TClassifier.train(epochs, step_size)
-#evaluation(TClassifier, 100, True)
 
-#DClassifier.load_images()
+#TODO Hyperparameters
+cfg = {
+    "image_size" : (224, 224),
+    "learning_rate" : 0.000134,
+    "mini_batch_size": 32,
+    "test_batch_size": 100,
+    "step_size": 32,
+    "epochs":60,
+    "dropout": True,
+    "prnt": True,
+    "optimizer" : optim.Adam,
+    "criterion" : nn.MSELoss()
+}
+
+if __name__ == '__main__':
+    TClassifier = Classifier(cfg["learning_rate"], cfg["mini_batch_size"], cfg["image_size"], cfg["dropout"], cfg["optimizer"], cfg["criterion"])
+    #TClassifier.view_image()
+    TClassifier.load_images()
+    evaluation(TClassifier, cfg["test_batch_size"], cfg["prnt"])
+    #TClassifier.load_weights('classifier')
+    TClassifier.train(cfg["epochs"], cfg["step_size"])
+    #evaluation(TClassifier, cfg["test_batch_size"], cfg["prnt"])
+
+    #DClassifier.load_images()
 
 
 
