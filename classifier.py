@@ -20,15 +20,15 @@ class ClassifierNet(nn.Module):
 
     def __init__(self, img_rows, img_cols, dropout):
         super(ClassifierNet, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels = 3,out_channels = 24, kernel_size = 3, stride= 1, padding= 0)
+        self.conv1 = nn.Conv2d(in_channels = 3,out_channels = 10, kernel_size = 3, stride= 1, padding= 0)
         self.pool1 = nn.MaxPool2d(2,2, padding= 0)
-        self.conv2 = nn.Conv2d(in_channels = 24 ,out_channels = 48, kernel_size = 3, stride= 1, padding= 0)
+        self.conv2 = nn.Conv2d(in_channels = 10 ,out_channels = 20, kernel_size = 3, stride= 1, padding= 0)
         self.pool2 = nn.MaxPool2d(2,2, padding= 0)
-        self.conv3 = nn.Conv2d(in_channels = 48 ,out_channels = 96, kernel_size = 3, stride= 1, padding= 0)
+        self.conv3 = nn.Conv2d(in_channels = 20 ,out_channels = 40, kernel_size = 3, stride= 1, padding= 0)
         self.pool3 = nn.MaxPool2d(2,2, padding= 0)
-        self.conv4 = nn.Conv2d(in_channels = 96 ,out_channels = 192, kernel_size = 3, stride= 1, padding= 0)
+        self.conv4 = nn.Conv2d(in_channels = 40 ,out_channels = 80, kernel_size = 3, stride= 1, padding= 0)
         self.pool4 = nn.MaxPool2d(2,2, padding= 0)
-        self.conv5 = nn.Conv2d(in_channels = 192 ,out_channels = 350, kernel_size = 3, stride= 1, padding= 0)
+        self.conv5 = nn.Conv2d(in_channels = 80 ,out_channels = 120, kernel_size = 3, stride= 1, padding= 0)
         self.pool5 = nn.MaxPool2d(2,2, padding= 0)
         """ CONV DIMENSIONS CALCULATIONS """
         self.conv_output_H = img_rows
@@ -53,13 +53,13 @@ class ClassifierNet(nn.Module):
 
         if dropout:
             self.linear = nn.Sequential(
-                torch.nn.Linear(calculate_flat_input(1, self.conv_output_H, self.conv_output_W)*350,  1024), nn.ReLU(True),
+                torch.nn.Linear(calculate_flat_input(1, self.conv_output_H, self.conv_output_W)*120,  1024), nn.ReLU(True),
                 nn.Dropout(),
                 nn.Linear(1024, 5),
                 )
         else:
             self.linear = nn.Sequential(
-                torch.nn.Linear(calculate_flat_input(1, self.conv_output_H, self.conv_output_W)*350,  1024), nn.ReLU(True),
+                torch.nn.Linear(calculate_flat_input(1, self.conv_output_H, self.conv_output_W)*120,  1024), nn.ReLU(True),
                 nn.Dropout(0),
                 nn.Linear(1024, 5),
                 )
@@ -79,7 +79,7 @@ class ClassifierNet(nn.Module):
         x=self.pool4(x)
         x = F.relu(self.conv5(x.float()))
         x=self.pool5(x)
-        x = x.view(-1, calculate_flat_input(1, self.conv_output_H, self.conv_output_W)*350)
+        x = x.view(-1, calculate_flat_input(1, self.conv_output_H, self.conv_output_W)*120)
         x= self.linear(x)
         return x
 
@@ -296,9 +296,9 @@ def evaluation(Classifier, test_batch_size, prnt):
             im.thumbnail(Classifier.image_size, Image.ANTIALIAS)
             im = np.array(im)
             im = cv2.resize(im, Classifier.image_size) 
-            im = torch.from_numpy(im)
+            im = torch.from_numpy(im).cuda().to(Classifier.device)
             im = im.transpose(0,-1)
-            im = im[None, :, :]
+            im = im[None, :, :, :]
 
             label = np.zeros(5)
 
@@ -327,9 +327,9 @@ def evaluation(Classifier, test_batch_size, prnt):
     errors = np.zeros(5)
     for i in range(test_batch_size*5):
         output = Classifier.model(batch_images[str(i)]).detach()
-        predicted = np.argmax(output)
+        predicted = torch.argmax(output)
         label = batch_labels[str(i)]
-        label = np.argmax(torch.Tensor([label]))
+        label = torch.argmax(torch.Tensor([label]))
         
 
         if predicted == label:
@@ -369,10 +369,10 @@ def evaluation(Classifier, test_batch_size, prnt):
 
 #TODO Hyperparameters 
 image_size = (224, 224)
-learning_rate = 0.000134
+learning_rate = 0.0000134
 mini_batch_size = 32
 step_size = 32
-epochs = 60
+epochs = 120
 TClassifier = Classifier(learning_rate, mini_batch_size, image_size, True)
 TClassifier.load_images()
 #TClassifier.load_weights('classifier')
