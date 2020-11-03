@@ -9,6 +9,10 @@ import cv2
 from PIL import Image
 import glob
 import random
+import optuna
+import joblib
+import pathlib
+
 
 def calculate_conv_output(W, K, P, S):
     return int((W-K+2*P)/S)+1
@@ -68,7 +72,8 @@ class ClassifierNet(nn.Module):
             self.cuda()
         else:
             print("NO CUDA to activate")
-    
+
+    #Ovveride the forward function in nn.Module
     def forward(self, x):
         x = F.relu(self.conv1(x.float()))
         x=self.pool1(x)
@@ -312,6 +317,7 @@ class Classifier:
 
         self.save_weights("Classifier")
 
+
 def evaluation(Classifier, test_batch_size, prnt):
     tulip =  glob.glob("Test_Flowers/tulip/*")
     sunflower =  glob.glob("Test_Flowers/sunflower/*")
@@ -390,7 +396,8 @@ def evaluation(Classifier, test_batch_size, prnt):
                 error_results.update({("tulip" +  str(errors[4])) : output } )
         
         total += 1
-    print("Cross validation:",correct/(total))
+    accuracy = correct/total
+    print("Cross validation:",accuracy)
     print("The agent managed", correct, "out of a total of:", total)      
     if prnt:  
         print("Errors in daisy images:", errors[0], "out of", test_batch_size)
@@ -403,34 +410,66 @@ def evaluation(Classifier, test_batch_size, prnt):
         print ("-----------------------ERRORS-----------------------")
         for error in error_results:
             print(error ,":", error_results[error])
+    #Returning accuracy for tuning of the model
+    return accuracy
 
 
 
-#TODO Hyperparameters
-cfg = {
-    "image_size" : (224, 224),
-    "learning_rate" : 0.000134,
-    "mini_batch_size": 32,
-    "test_batch_size": 100,
-    "step_size": 32,
-    "epochs":60,
-    "dropout": True,
-    "prnt": True,
-    "optimizer" : optim.Adam,
-    "criterion" : nn.MSELoss()
-}
 
-if __name__ == '__main__':
+
+def train_classifier(trial):
+
+    cfg = {
+        "image_size": (224, 224),
+        "learning_rate": trial.suggest_loguniform('lr', 1e-3, 1e-2),  # 0.000134,
+        "mini_batch_size": 32,
+        "test_batch_size": 100,
+        "step_size": 32,
+        "epochs": 60,
+        "dropout": trial.suggest_categorical('dropdown', [True, False]),
+        "prnt": False,
+        "optimizer": trial.suggest_categorical('optimizer', [optim.Adam, optim.SGD, optim.RMSprop]), # optim.Adam,
+        "criterion": nn.MSELoss()
+    }
+
     TClassifier = Classifier(cfg["learning_rate"], cfg["mini_batch_size"], cfg["image_size"], cfg["dropout"], cfg["optimizer"], cfg["criterion"])
-    #TClassifier.view_image()
     TClassifier.load_images()
-    evaluation(TClassifier, cfg["test_batch_size"], cfg["prnt"])
     #TClassifier.load_weights('classifier')
     TClassifier.train(cfg["epochs"], cfg["step_size"])
-    #evaluation(TClassifier, cfg["test_batch_size"], cfg["prnt"])
+    accuracy = evaluation(TClassifier, cfg["test_batch_size"], cfg["prnt"])
+    return accuracy
 
-    #DClassifier.load_images()
+
+def conduct_study(n_trials):
+    #Conduct a study with n numbers of trials
+    study = optuna.create_study(sampler=optuna.samplers.TPESampler(), direction='maximize')
+    study.optimize(train_classifier, n_trials=n_trials)
+    save_study_to_file(study)
+    return study
 
 
+def save_study_to_file(study):
+    # save results as a joblibdump
+    filename = 'classifier_study_' + str(len(glob.glob('trial_results/*'))) + '.pkl'
+    file_path = pathlib.Path().absolute().joinpath('trial_results', filename)
+    print(len(glob.glob('\trial_result*')))
+    joblib.dump(study, file_path)
+
+
+def read_study_from_file(filename):
+    # read results from file with name=filename
+    file_path = pathlib.Path().absolute().joinpath('trial_results', filename)
+    study = joblib.load(file_path)
+    return study.trials_dataframe().drop(['state', 'datetime_start', 'datetime_complete'], axis=1)
+
+
+if __name__ == '__main__':
+
+    #To conduct a study with n number of trials as parameter, comment this if you only want to read a
+    conduct_study(1)
+    last_conducted_study = 'classifier_study_' + str(len(glob.glob('trial_results/*'))-1) + '.pkl'
+    #specify name of study_file to read from default folder or just read the last one
+    data_frame = read_study_from_file(last_conducted_study)
+    print(data_frame)
 
 
