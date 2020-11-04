@@ -1,0 +1,3 @@
+,number,value,datetime_start,datetime_complete,duration,params_dropout,params_epochs,params_lr,state
+0,0,0.53,2020-11-04 14:03:16.665224,2020-11-04 14:05:03.610825,0 days 00:01:46.945601,True,20,0.0001916387460568236,COMPLETE
+1,1,0.0,2020-11-04 14:05:03.611824,2020-11-04 14:06:56.990461,0 days 00:01:53.378637,False,20,0.0003565388567700109,COMPLETE

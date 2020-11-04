@@ -276,7 +276,7 @@ class Classifier:
             self.batch_path.update({str(counter): imagePath})
             counter+= 1
     
-    def train(self, number_of_epochs, number_of_batches):
+    def train(self, trial, number_of_epochs, number_of_batches, test_batch_size):
         loss_list = []
         acc_list = []
         for epoch in range(number_of_epochs):
@@ -311,8 +311,14 @@ class Classifier:
                                         (correct / self.batch_size) * 100))
                 self.reset_batches()
                 self.load_images()
-            if epoch%5 == 0:
-                evaluation(self, 100, False)
+
+            # Evaluate accuracy of model after this epoch
+            #TODO: implement limit of testing size
+            accuracy = evaluation(self, test_batch_size, False)
+            #report accuracy of model now and evaluate if the current trial should prune
+            trial.report(accuracy, epoch)
+            if trial.should_prune():
+                raise optuna.exceptions.TrialPruned()
             self.reset_epoch()
 
         self.save_weights("Classifier")
@@ -421,22 +427,23 @@ def train_classifier(trial):
 
     cfg = {
         "image_size": (224, 224),
-        "learning_rate": trial.suggest_loguniform('lr', 1e-3, 1e-2),  # 0.000134,
-        "mini_batch_size": 32,
+        "learning_rate": trial.suggest_loguniform('lr', 1e-4, 1e-3),  # 0.000134,
+        "mini_batch_size": 20,
         "test_batch_size": 100,
         "step_size": 32,
-        "epochs": 60,
-        "dropout": trial.suggest_categorical('dropdown', [True, False]),
+        "epochs": trial.suggest_int('epochs', 20, 60, 5),
+        "dropout": trial.suggest_categorical('dropout', [True, False]),
         "prnt": False,
-        "optimizer": trial.suggest_categorical('optimizer', [optim.Adam, optim.SGD, optim.RMSprop]), # optim.Adam,
+        "optimizer": optim.Adam, # trial.suggest_categorical('optimizer', [optim.Adam, optim.SGD, optim.RMSprop]),
         "criterion": nn.MSELoss()
     }
 
     TClassifier = Classifier(cfg["learning_rate"], cfg["mini_batch_size"], cfg["image_size"], cfg["dropout"], cfg["optimizer"], cfg["criterion"])
     TClassifier.load_images()
     #TClassifier.load_weights('classifier')
-    TClassifier.train(cfg["epochs"], cfg["step_size"])
+    TClassifier.train(trial, cfg["epochs"], cfg["step_size"], cfg["test_batch_size"])
     accuracy = evaluation(TClassifier, cfg["test_batch_size"], cfg["prnt"])
+
     return accuracy
 
 
@@ -450,10 +457,15 @@ def conduct_study(n_trials):
 
 def save_study_to_file(study):
     # save results as a joblibdump
-    filename = 'classifier_study_' + str(len(glob.glob('trial_results/*'))) + '.pkl'
-    file_path = pathlib.Path().absolute().joinpath('trial_results', filename)
+    filename = 'classifier_study_' + str(len(glob.glob('trial_results/*')))
+    file_path = pathlib.Path().absolute().joinpath('trial_results', filename + '.pkl')
     print(len(glob.glob('\trial_result*')))
     joblib.dump(study, file_path)
+    #Save a copy as a csv file
+    data_frame = study.trials_dataframe()
+    csv_path = pathlib.Path().absolute().joinpath('trial_results', 'csv', filename + '.csv')
+    data_frame.to_csv(csv_path)
+
 
 
 def read_study_from_file(filename):
@@ -466,10 +478,11 @@ def read_study_from_file(filename):
 if __name__ == '__main__':
 
     #To conduct a study with n number of trials as parameter, comment this if you only want to read a
-    conduct_study(1)
-    last_conducted_study = 'classifier_study_' + str(len(glob.glob('trial_results/*'))-1) + '.pkl'
+    conduct_study(20)
+    #last_conducted_study = 'classifier_study_' + str(len(glob.glob('trial_results/*'))-1) + '.pkl'
     #specify name of study_file to read from default folder or just read the last one
-    data_frame = read_study_from_file(last_conducted_study)
-    print(data_frame)
+    #data_frame = read_study_from_file(last_conducted_study)
+    #print(data_frame)
+
 
 
