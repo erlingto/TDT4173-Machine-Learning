@@ -472,7 +472,7 @@ def read_study_from_file(filename):
     # read results from file with name=filename
     file_path = pathlib.Path().absolute().joinpath('trial_results', filename)
     study = joblib.load(file_path)
-    return study.trials_dataframe().drop(['state', 'datetime_start', 'datetime_complete'], axis=1)
+    return study.trials_dataframe()
 
 
 if __name__ == '__main__':
