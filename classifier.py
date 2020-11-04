@@ -420,12 +420,12 @@ def evaluation(Classifier, test_batch_size, prnt):
 def train_classifier(trial):
 
     cfg = {
-        "image_size": (224, 224),
+        "image_size": (224, 224), (180, 180), (150, 150), (100,100), (300, 300)
         "learning_rate": trial.suggest_loguniform('lr', 1e-3, 1e-2),  # 0.000134,
         "mini_batch_size": 32,
         "test_batch_size": 100,
         "step_size": 32,
-        "epochs": 60,
+        "epochs": 40,
         "dropout": trial.suggest_categorical('dropdown', [True, False]),
         "prnt": False,
         "optimizer": trial.suggest_categorical('optimizer', [optim.Adam, optim.SGD, optim.RMSprop]), # optim.Adam,
@@ -466,7 +466,7 @@ def read_study_from_file(filename):
 if __name__ == '__main__':
 
     #To conduct a study with n number of trials as parameter, comment this if you only want to read a
-    conduct_study(1)
+    conduct_study(100)
     last_conducted_study = 'classifier_study_' + str(len(glob.glob('trial_results/*'))-1) + '.pkl'
     #specify name of study_file to read from default folder or just read the last one
     data_frame = read_study_from_file(last_conducted_study)
