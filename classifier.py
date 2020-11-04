@@ -426,12 +426,13 @@ def evaluation(Classifier, test_batch_size, prnt):
 def train_classifier(trial):
 
     cfg = {
-        "image_size": (224, 224),
+        "image_size": trial.suggest_categorical('image_size', [(224, 224), (180, 180), (150, 150),
+                                                               (100,100), (300, 300)]),
         "learning_rate": trial.suggest_loguniform('lr', 1e-4, 1e-3),  # 0.000134,
         "mini_batch_size": 20,
         "test_batch_size": 100,
         "step_size": 32,
-        "epochs": trial.suggest_int('epochs', 20, 60, 5),
+        "epochs": trial.suggest_int('epochs', 30, 60, 5),
         "dropout": trial.suggest_categorical('dropout', [True, False]),
         "prnt": False,
         "optimizer": optim.Adam, # trial.suggest_categorical('optimizer', [optim.Adam, optim.SGD, optim.RMSprop]),
