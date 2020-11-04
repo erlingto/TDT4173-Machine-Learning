@@ -104,7 +104,17 @@ class ClassifierNet(nn.Module):
 
 
 class Classifier:
-    def __init__(self, learning_rate, batch_size, image_size, dropout, optimizer, criterion, dropout_rate):
+    def __init__(self, cfg):
+
+        learning_rate = cfg["learning_rate"]
+        batch_size = cfg["mini_batch_size"]
+        image_size = cfg["image_size"]
+        dropout = cfg["dropout"]
+        optimizer = cfg["optimizer"]
+        criterion = cfg["criterion"]
+        dropout_rate = cfg["dropout_rate"]
+        save_weights = cfg['save_weights']
+
         if torch.cuda.is_available():
             self.device = torch.device("cuda:0")
             self.cuda = True
@@ -335,8 +345,8 @@ class Classifier:
             if trial.should_prune():
                 raise optuna.exceptions.TrialPruned()
             self.reset_epoch()
-
-        self.save_weights("Classifier")
+        if(self.save_weights):
+            self.save_weights("Classifier")
 
 
 def evaluation(Classifier, test_batch_size, prnt):
@@ -442,18 +452,18 @@ def objective(trial):
         "mini_batch_size": 32,
         "test_batch_size": 100,
         "step_size": 32,
-        "epochs":  trial.suggest_int('epochs', low=30, high=60, step=5),
+        "epochs": trial.suggest_int('epochs', low=30, high=60, step=5),
         # trial.suggest_categorical('dropout', [True, False]),
         "dropout": True,
         "dropout_rate": trial.suggest_discrete_uniform('droput_rate', low=0.1, high=0.5, q=0.1),
         "prnt": False,
         "optimizer": trial.suggest_categorical('optimizer', [optim.Adam, optim.SGD, optim.RMSprop]),
-        "criterion": nn.MSELoss()
+        "criterion": nn.MSELoss(),
+        "save_weights": False
     }
     print("Beginning Trial nr. " + str(trial.number) + " with params:")
     print(trial.params)
-    TClassifier = Classifier(cfg["learning_rate"], cfg["mini_batch_size"],
-                             cfg["image_size"], cfg["dropout"], cfg["optimizer"], cfg["criterion"], cfg["dropout_rate"])
+    TClassifier = Classifier(cfg)
     TClassifier.load_images()
     TClassifier.train(trial, cfg["epochs"],
                       cfg["step_size"], cfg["test_batch_size"])
@@ -509,6 +519,6 @@ def generate_graphs_from_study(study):
 
 if __name__ == '__main__':
     # To conduct a study with n number of trials as parameter, comment this if you only want to read a
-    study = conduct_study(100)
+    study = conduct_study(10)
     #study = read_study_from_file("classifier_study_0.pkl")
     generate_graphs_from_study(study)
