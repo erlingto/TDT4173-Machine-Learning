@@ -16,81 +16,95 @@ import pathlib
 
 def calculate_conv_output(W, K, P, S):
     return int((W-K+2*P)/S)+1
-    
+
+
 def calculate_flat_input(dim_1, dim_2, dim_3):
     return int(dim_1*dim_2*dim_3)
 
+
 class ClassifierNet(nn.Module):
 
-    def __init__(self, img_rows, img_cols, dropout):
+    def __init__(self, img_rows, img_cols, dropout, dropout_rate):
 
         super(ClassifierNet, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels = 3,out_channels = 24, kernel_size = 3, stride= 1, padding= 0)
-        self.pool1 = nn.MaxPool2d(2,2, padding= 0)
-        self.conv2 = nn.Conv2d(in_channels = 24 ,out_channels = 48, kernel_size = 3, stride= 1, padding= 0)
-        self.pool2 = nn.MaxPool2d(2,2, padding= 0)
-        self.conv3 = nn.Conv2d(in_channels = 48 ,out_channels = 96, kernel_size = 3, stride= 1, padding= 0)
-        self.pool3 = nn.MaxPool2d(2,2, padding= 0)
-        self.conv4 = nn.Conv2d(in_channels = 96 ,out_channels = 192, kernel_size = 3, stride= 1, padding= 0)
-        self.pool4 = nn.MaxPool2d(2,2, padding= 0)
-        self.conv5 = nn.Conv2d(in_channels = 192 ,out_channels = 350, kernel_size = 3, stride= 1, padding= 0)
-        self.pool5 = nn.MaxPool2d(2,2, padding= 0)
+        self.conv1 = nn.Conv2d(
+            in_channels=3, out_channels=24, kernel_size=3, stride=1, padding=0)
+        self.pool1 = nn.MaxPool2d(2, 2, padding=0)
+        self.conv2 = nn.Conv2d(
+            in_channels=24, out_channels=48, kernel_size=3, stride=1, padding=0)
+        self.pool2 = nn.MaxPool2d(2, 2, padding=0)
+        self.conv3 = nn.Conv2d(
+            in_channels=48, out_channels=96, kernel_size=3, stride=1, padding=0)
+        self.pool3 = nn.MaxPool2d(2, 2, padding=0)
+        self.conv4 = nn.Conv2d(
+            in_channels=96, out_channels=192, kernel_size=3, stride=1, padding=0)
+        self.pool4 = nn.MaxPool2d(2, 2, padding=0)
+        self.conv5 = nn.Conv2d(
+            in_channels=192, out_channels=350, kernel_size=3, stride=1, padding=0)
+        self.pool5 = nn.MaxPool2d(2, 2, padding=0)
         """ CONV DIMENSIONS CALCULATIONS """
         self.conv_output_H = img_rows
         self.conv_output_W = img_cols
-        
 
         for _ in range(4):
             """ CONV DIMENSIONS CALCULATIONS """
-            self.conv_output_H = calculate_conv_output(self.conv_output_H , 3, 0, 1)
-            self.conv_output_W = calculate_conv_output(self.conv_output_W , 3, 0, 1)
+            self.conv_output_H = calculate_conv_output(
+                self.conv_output_H, 3, 0, 1)
+            self.conv_output_W = calculate_conv_output(
+                self.conv_output_W, 3, 0, 1)
             """ POOLING DIMENSIONS CALCULATIONS """
-            self.conv_output_H = calculate_conv_output(self.conv_output_H , 2, 0, 2)
-            self.conv_output_W = calculate_conv_output(self.conv_output_W , 2, 0, 2)
+            self.conv_output_H = calculate_conv_output(
+                self.conv_output_H, 2, 0, 2)
+            self.conv_output_W = calculate_conv_output(
+                self.conv_output_W, 2, 0, 2)
 
-        self.conv_output_H = calculate_conv_output(self.conv_output_H , 3, 0, 1)
-        self.conv_output_W = calculate_conv_output(self.conv_output_W , 3, 0, 1)
+        self.conv_output_H = calculate_conv_output(self.conv_output_H, 3, 0, 1)
+        self.conv_output_W = calculate_conv_output(self.conv_output_W, 3, 0, 1)
         """ POOLING DIMENSIONS CALCULATIONS """
-        self.conv_output_H = calculate_conv_output(self.conv_output_H , 2, 0, 2)
-        self.conv_output_W = calculate_conv_output(self.conv_output_W , 2, 0, 2)
-        print(self.conv_output_H)
-        print(self.conv_output_W)
+        self.conv_output_H = calculate_conv_output(self.conv_output_H, 2, 0, 2)
+        self.conv_output_W = calculate_conv_output(self.conv_output_W, 2, 0, 2)
+        print("Convolutional output: " + str(self.conv_output_H) +
+              "X" + str(self.conv_output_W))
 
         if dropout:
             self.linear = nn.Sequential(
-                torch.nn.Linear(calculate_flat_input(1, self.conv_output_H, self.conv_output_W)*350,  1024), nn.ReLU(True),
-                nn.Dropout(),
+                torch.nn.Linear(calculate_flat_input(
+                    1, self.conv_output_H, self.conv_output_W)*350,  1024), nn.ReLU(True),
+                nn.Dropout(p=dropout_rate),
                 nn.Linear(1024, 5),
-                )
+            )
         else:
             self.linear = nn.Sequential(
-                torch.nn.Linear(calculate_flat_input(1, self.conv_output_H, self.conv_output_W)*350,  1024), nn.ReLU(True),
+                torch.nn.Linear(calculate_flat_input(
+                    1, self.conv_output_H, self.conv_output_W)*350,  1024), nn.ReLU(True),
                 nn.Dropout(0),
                 nn.Linear(1024, 5),
-                )
+            )
         if torch.cuda.is_available():
             self.cuda()
         else:
             print("NO CUDA to activate")
 
-    #Ovveride the forward function in nn.Module
+    # Ovveride the forward function in nn.Module
     def forward(self, x):
         x = F.relu(self.conv1(x.float()))
-        x=self.pool1(x)
+        x = self.pool1(x)
         x = F.relu(self.conv2(x.float()))
-        x=self.pool2(x)
+        x = self.pool2(x)
         x = F.relu(self.conv3(x.float()))
-        x=self.pool3(x)
+        x = self.pool3(x)
         x = F.relu(self.conv4(x.float()))
-        x=self.pool4(x)
+        x = self.pool4(x)
         x = F.relu(self.conv5(x.float()))
-        x=self.pool5(x)
-        x = x.view(-1, calculate_flat_input(1, self.conv_output_H, self.conv_output_W)*350)
-        x= self.linear(x)
+        x = self.pool5(x)
+        x = x.view(-1, calculate_flat_input(1,
+                                            self.conv_output_H, self.conv_output_W)*350)
+        x = self.linear(x)
         return x
 
+
 class Classifier:
-    def __init__(self, learning_rate, batch_size, image_size, dropout, optimizer, criterion):
+    def __init__(self, learning_rate, batch_size, image_size, dropout, optimizer, criterion, dropout_rate):
         if torch.cuda.is_available():
             self.device = torch.device("cuda:0")
             self.cuda = True
@@ -99,22 +113,26 @@ class Classifier:
             self.device = torch.device("cpu")
             self.cuda = False
         print("Selected device is :" + str(self.device))
+
         self.image_size = image_size
-        self.model = ClassifierNet(self.image_size[0],self.image_size[1], dropout)
-        #Todo generalize classifier, take out paths maybe in a data loader function and pass it to classifier
-        tulip =  glob.glob("Flowers/tulip/*")
-        sunflower =  glob.glob("Flowers/sunflower/*")
-        rose =  glob.glob("Flowers/rose/*")
-        dandelion =  glob.glob("Flowers/dandelion/*")
-        daisy =  glob.glob("Flowers/daisy/*")
-        self.paths = {"tulip": tulip, "sunflower": sunflower, "rose": rose, "dandelion": dandelion, "daisy": daisy}
+        self.model = ClassifierNet(
+            self.image_size[0], self.image_size[1], dropout, dropout_rate)
+
+        # Todo generalize classifier, take out paths maybe in a data loader function and pass it to classifier
+        tulip = glob.glob("Flowers/tulip/*")
+        sunflower = glob.glob("Flowers/sunflower/*")
+        rose = glob.glob("Flowers/rose/*")
+        dandelion = glob.glob("Flowers/dandelion/*")
+        daisy = glob.glob("Flowers/daisy/*")
+        self.paths = {"tulip": tulip, "sunflower": sunflower,
+                      "rose": rose, "dandelion": dandelion, "daisy": daisy}
 
         self.batch_size = batch_size
         self.learning_rate = learning_rate
-        self.optimizer = optimizer(self.model.parameters() ,lr = learning_rate) #optim.Adam(self.model.parameters() ,lr = learning_rate)
-        self.criterion = criterion #nn.MSELoss()
+        # optim.Adam(self.model.parameters() ,lr = learning_rate)
+        self.optimizer = optimizer(self.model.parameters(), lr=learning_rate)
+        self.criterion = criterion  # nn.MSELoss()
 
-        
         self.batch_images = {}
         self.batch_labels = {}
         self.batch_path = {}
@@ -124,14 +142,14 @@ class Classifier:
         self.batch_labels = {}
         self.batch_path = {}
 
-    #TODO implement randomized image augmentation
+    # TODO implement randomized image augmentation
     def image_augmentation(self, im):
         return im
- 
-    #TODO implement image visualizations
+
+    # TODO implement image visualizations
     def view_image(self):
 
-        #open an image, resize it and print it
+        # open an image, resize it and print it
         groups = list(self.paths.keys())
         group = random.choice(groups)
 
@@ -139,41 +157,40 @@ class Classifier:
         im = Image.open(imagePath)
         im.thumbnail(self.image_size, Image.ANTIALIAS)
         im = np.array(im)
-        #TODO resize without converting to numpy array?
+        # TODO resize without converting to numpy array?
         im = cv2.resize(im, self.image_size)
         image = Image.fromarray(im, "RGB")
         image.show()
 
-        #convert to tensor for processing
+        # convert to tensor for processing
         im = torch.from_numpy(im)
         if self.cuda:
             im = im.cuda().to(self.device)
-        im = im.transpose(0,-1)
-        im = im[None,:, :, :]
+        im = im.transpose(0, -1)
+        im = im[None, :, :, :]
         x = im
 
-        #tensor goes to CNN layers and print picture for each layer
+        # tensor goes to CNN layers and print picture for each layer
         x = F.relu(self.model.conv1(x.float()))
         Classifier.tensor_to_image(self, x)
-        x=self.model.pool1(x)
+        x = self.model.pool1(x)
         Classifier.tensor_to_image(self, x)
         x = F.relu(self.model.conv2(x.float()))
         Classifier.tensor_to_image(self, x)
-        x=self.model.pool2(x)
+        x = self.model.pool2(x)
         Classifier.tensor_to_image(self, x)
         x = F.relu(self.model.conv3(x.float()))
         Classifier.tensor_to_image(self, x)
-        x=self.model.pool3(x)
+        x = self.model.pool3(x)
         Classifier.tensor_to_image(self, x)
         x = F.relu(self.model.conv4(x.float()))
         Classifier.tensor_to_image(self, x)
-        x=self.model.pool4(x)
+        x = self.model.pool4(x)
         Classifier.tensor_to_image(self, x)
         x = F.relu(self.model.conv5(x.float()))
         Classifier.tensor_to_image(self, x)
-        x=self.model.pool5(x)
+        x = self.model.pool5(x)
         Classifier.tensor_to_image(self, x)
-
 
     def tensor_to_image(self, tensor):
         if self.cuda:
@@ -182,23 +199,24 @@ class Classifier:
         image = Image.fromarray(image[0][1], "RGB")
         image.show()
 
-    #TODO implement capsule net
+    # TODO implement capsule net
     def capsulenet(self):
         return None
 
-    #TODO plot loss, cross validation
+    # TODO plot loss, cross validation
     def plot_results(self):
         return None
 
     def reset_epoch(self):
-        #TODO Generalize reset function
-        tulip =  glob.glob("Flowers/tulip/*")
-        sunflower =  glob.glob("Flowers/sunflower/*")
-        rose =  glob.glob("Flowers/rose/*")
-        dandelion =  glob.glob("Flowers/dandelion/*")
-        daisy =  glob.glob("Flowers/daisy/*")
+        # TODO Generalize reset function
+        tulip = glob.glob("Flowers/tulip/*")
+        sunflower = glob.glob("Flowers/sunflower/*")
+        rose = glob.glob("Flowers/rose/*")
+        dandelion = glob.glob("Flowers/dandelion/*")
+        daisy = glob.glob("Flowers/daisy/*")
 
-        self.paths = {"tulip": tulip, "sunflower": sunflower, "rose": rose, "dandelion": dandelion, "daisy": daisy}
+        self.paths = {"tulip": tulip, "sunflower": sunflower,
+                      "rose": rose, "dandelion": dandelion, "daisy": daisy}
 
     def load_weights(self, path):
         self.model.load_state_dict(torch.load(path))
@@ -206,18 +224,17 @@ class Classifier:
 
     def save_weights(self, path):
         torch.save(self.model.state_dict(), path)
-    
+
     def predict(self, image):
         return self.model(image)
-
 
     def predict_test(self, imagePath):
         im = Image.open(imagePath)
         im.thumbnail(self.image_size, Image.ANTIALIAS)
         im = np.array(im)
-        im = cv2.resize(im, self.image_size) 
+        im = cv2.resize(im, self.image_size)
         im = torch.from_numpy(im).cuda().to(self.device)
-        im = im.transpose(0,-1)
+        im = im.transpose(0, -1)
         im = im[None, :, :, :]
 
         output = self.model(im)
@@ -235,28 +252,26 @@ class Classifier:
         print(predicted)
         return predicted
 
-
     def load_images(self):
         counter = 0
         for i in range(self.batch_size):
             groups = list(self.paths.keys())
             group = random.choice(groups)
-            
+
             imagePath = np.random.choice(self.paths[group])
             # load the image, pre-process it, and store it in the data list
-            im = Image.open(imagePath)  
+            im = Image.open(imagePath)
             im.thumbnail(self.image_size, Image.ANTIALIAS)
             im = np.array(im)
-            #TODO resize without converting to numpy array?
-            im = cv2.resize(im, self.image_size) 
+            # TODO resize without converting to numpy array?
+            im = cv2.resize(im, self.image_size)
             im = torch.from_numpy(im)
             if self.cuda:
                 im = im.cuda().to(self.device)
-            #TODO implement transpose, rotate, etc, randomly
-            im = im.transpose(0,-1)
-           
+            # TODO implement transpose, rotate, etc, randomly
+            im = im.transpose(0, -1)
+
             im = im[None, :, :, :]
-           
 
             label = np.zeros(5)
 
@@ -274,8 +289,8 @@ class Classifier:
             self.batch_images.update({str(counter): im})
             self.batch_labels.update({str(counter): label})
             self.batch_path.update({str(counter): imagePath})
-            counter+= 1
-    
+            counter += 1
+
     def train(self, trial, number_of_epochs, number_of_batches, test_batch_size):
         loss_list = []
         acc_list = []
@@ -290,7 +305,7 @@ class Classifier:
                     label = torch.Tensor([label])
                     if self.cuda:
                         label = label.cuda().to(self.device)
-                    #TODO change to tensor in load_images
+                    # TODO change to tensor in load_images
                     loss = self.criterion(output, label)
                     loss_list.append(loss.item())
 
@@ -302,20 +317,20 @@ class Classifier:
                     # Track the accuracy
                     predicted = torch.round(output.data[0])
                     if torch.argmax(predicted) == torch.argmax(label):
-                        correct+= 1
+                        correct += 1
                     acc_list.append(correct / self.batch_size)
 
                 if (i + 1) % self.batch_size == 0:
-                        print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
-                                .format(epoch + 1, number_of_epochs, step , number_of_batches, loss.item(),
-                                        (correct / self.batch_size) * 100))
+                    print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
+                          .format(epoch + 1, number_of_epochs, step + 1, number_of_batches, loss.item(),
+                                  (correct / self.batch_size) * 100))
                 self.reset_batches()
                 self.load_images()
 
             # Evaluate accuracy of model after this epoch
-            #TODO: implement limit of testing size
+            # TODO: implement limit of testing size
             accuracy = evaluation(self, test_batch_size, False)
-            #report accuracy of model now and evaluate if the current trial should prune
+            # report accuracy of model now and evaluate if the current trial should prune
             trial.report(accuracy, epoch)
             if trial.should_prune():
                 raise optuna.exceptions.TrialPruned()
@@ -325,12 +340,13 @@ class Classifier:
 
 
 def evaluation(Classifier, test_batch_size, prnt):
-    tulip =  glob.glob("Test_Flowers/tulip/*")
-    sunflower =  glob.glob("Test_Flowers/sunflower/*")
-    rose =  glob.glob("Test_Flowers/rose/*")
-    dandelion =  glob.glob("Test_Flowers/dandelion/*")
-    daisy =  glob.glob("Test_Flowers/daisy/*")
-    paths = {"tulip": tulip, "sunflower": sunflower, "rose": rose, "dandelion": dandelion, "daisy": daisy}
+    tulip = glob.glob("Test_Flowers/tulip/*")
+    sunflower = glob.glob("Test_Flowers/sunflower/*")
+    rose = glob.glob("Test_Flowers/rose/*")
+    dandelion = glob.glob("Test_Flowers/dandelion/*")
+    daisy = glob.glob("Test_Flowers/daisy/*")
+    paths = {"tulip": tulip, "sunflower": sunflower,
+             "rose": rose, "dandelion": dandelion, "daisy": daisy}
     groups = list(paths.keys())
     counter = 0
     batch_images = {}
@@ -342,13 +358,12 @@ def evaluation(Classifier, test_batch_size, prnt):
             im = Image.open(imagePath)
             im.thumbnail(Classifier.image_size, Image.ANTIALIAS)
             im = np.array(im)
-            im = cv2.resize(im, Classifier.image_size) 
+            im = cv2.resize(im, Classifier.image_size)
             im = torch.from_numpy(im)
             if Classifier.cuda:
                 im = im.cuda().to(Classifier.device)
-            im = im.transpose(0,-1)
+            im = im.transpose(0, -1)
             im = im[None, :, :]
-            
 
             label = np.zeros(5)
 
@@ -363,14 +378,11 @@ def evaluation(Classifier, test_batch_size, prnt):
             elif group == "tulip":
                 label[4] = 1
 
-
-
             batch_images.update({str(counter): im})
             batch_labels.update({str(counter): label})
-            
-            counter+= 1
-    
-    
+
+            counter += 1
+
     correct = 0
     total = 0
 
@@ -380,110 +392,123 @@ def evaluation(Classifier, test_batch_size, prnt):
         predicted = torch.argmax(output)
         label = batch_labels[str(i)]
         label = torch.argmax(torch.Tensor([label]))
-        
 
         if predicted == label:
             correct += 1
         else:
             if label == 0:
-                errors[0] +=1
-                error_results.update({("daisy" + str(errors[0])) : output } )
+                errors[0] += 1
+                error_results.update({("daisy" + str(errors[0])): output})
             elif label == 1:
-                errors[1] +=1
-                error_results.update({("dandelion" + str(errors[1])) : output } )
+                errors[1] += 1
+                error_results.update({("dandelion" + str(errors[1])): output})
             elif label == 2:
-                errors[2] +=1
-                error_results.update({("rose" +  str(errors[2])) : output } )
+                errors[2] += 1
+                error_results.update({("rose" + str(errors[2])): output})
             elif label == 3:
-                errors[3] +=1
-                error_results.update({("sunflower" + str(errors[3])) : output } )
+                errors[3] += 1
+                error_results.update({("sunflower" + str(errors[3])): output})
             elif label == 4:
-                errors[4] +=1
-                error_results.update({("tulip" +  str(errors[4])) : output } )
-        
+                errors[4] += 1
+                error_results.update({("tulip" + str(errors[4])): output})
+
         total += 1
     accuracy = correct/total
-    print("Cross validation:",accuracy)
-    print("The agent managed", correct, "out of a total of:", total)      
-    if prnt:  
+    print("Cross validation:", accuracy)
+    print("The agent managed", correct, "out of a total of:", total)
+    if prnt:
         print("Errors in daisy images:", errors[0], "out of", test_batch_size)
-        print("Errors in dandelion images:", errors[1], "out of", test_batch_size)
+        print("Errors in dandelion images:",
+              errors[1], "out of", test_batch_size)
         print("Errors in rose images:", errors[2], "out of", test_batch_size)
-        print("Errors in sunflower images:", errors[3], "out of", test_batch_size)
+        print("Errors in sunflower images:",
+              errors[3], "out of", test_batch_size)
         print("Errors in tulip images:", errors[4], "out of", test_batch_size)
 
-
-        print ("-----------------------ERRORS-----------------------")
+        print("-----------------------ERRORS-----------------------")
         for error in error_results:
-            print(error ,":", error_results[error])
-    #Returning accuracy for tuning of the model
+            print(error, ":", error_results[error])
+    # Returning accuracy for tuning of the model
     return accuracy
 
 
-
-
-
-def train_classifier(trial):
+def objective(trial):
 
     cfg = {
         "image_size": trial.suggest_categorical('image_size', [(224, 224), (180, 180), (150, 150),
-                                                               (100,100), (300, 300)]),
-        "learning_rate": trial.suggest_loguniform('lr', 1e-4, 1e-3),  # 0.000134,
-        "mini_batch_size": 20,
+                                                               (100, 100), (300, 300)]),
+        # 0.000134,
+        "learning_rate": trial.suggest_loguniform('lr', low=1e-6, high=1e-1),
+        "mini_batch_size": 32,
         "test_batch_size": 100,
         "step_size": 32,
-        "epochs": trial.suggest_int('epochs', 30, 60, 5),
-        "dropout": trial.suggest_categorical('dropout', [True, False]),
+        "epochs":  trial.suggest_int('epochs', low=30, high=60, step=5),
+        # trial.suggest_categorical('dropout', [True, False]),
+        "dropout": True,
+        "dropout_rate": trial.suggest_discrete_uniform('droput_rate', low=0.1, high=0.5, q=0.1),
         "prnt": False,
-        "optimizer": optim.Adam, # trial.suggest_categorical('optimizer', [optim.Adam, optim.SGD, optim.RMSprop]),
+        "optimizer": trial.suggest_categorical('optimizer', [optim.Adam, optim.SGD, optim.RMSprop]),
         "criterion": nn.MSELoss()
     }
-
-    TClassifier = Classifier(cfg["learning_rate"], cfg["mini_batch_size"], cfg["image_size"], cfg["dropout"], cfg["optimizer"], cfg["criterion"])
+    print("Beginning Trial nr. " + str(trial.number) + " with params:")
+    print(trial.params)
+    TClassifier = Classifier(cfg["learning_rate"], cfg["mini_batch_size"],
+                             cfg["image_size"], cfg["dropout"], cfg["optimizer"], cfg["criterion"], cfg["dropout_rate"])
     TClassifier.load_images()
-    #TClassifier.load_weights('classifier')
-    TClassifier.train(trial, cfg["epochs"], cfg["step_size"], cfg["test_batch_size"])
+    TClassifier.train(trial, cfg["epochs"],
+                      cfg["step_size"], cfg["test_batch_size"])
     accuracy = evaluation(TClassifier, cfg["test_batch_size"], cfg["prnt"])
-
     return accuracy
 
 
 def conduct_study(n_trials):
-    #Conduct a study with n numbers of trials
-    study = optuna.create_study(sampler=optuna.samplers.TPESampler(), direction='maximize')
-    study.optimize(train_classifier, n_trials=n_trials)
+    # Conduct a study with n numbers of trials
+
+    # choose a sampler. Docs here: https://optuna.readthedocs.io/en/stable/reference/samplers.html#module-optuna.samplers
+    sampler = optuna.samplers.TPESampler()
+    # choose a pruner. Docs here: https://optuna.readthedocs.io/en/stable/reference/pruners.html
+    pruner = optuna.pruners.MedianPruner()
+    study = optuna.create_study(
+        sampler=sampler, direction='maximize', pruner=pruner)
+    study.optimize(objective, n_trials=n_trials)
     save_study_to_file(study)
     return study
 
 
 def save_study_to_file(study):
-    # save results as a joblibdump
+    # save results as a joblib dump
     filename = 'classifier_study_' + str(len(glob.glob('trial_results/*')))
-    file_path = pathlib.Path().absolute().joinpath('trial_results', filename + '.pkl')
+    file_path = pathlib.Path().absolute().joinpath(
+        'trial_results', filename + '.pkl')
     print(len(glob.glob('\trial_result*')))
     joblib.dump(study, file_path)
-    #Save a copy as a csv file
+    # Save a copy as a csv file
     data_frame = study.trials_dataframe()
-    csv_path = pathlib.Path().absolute().joinpath('trial_results', 'csv', filename + '.csv')
+    csv_path = pathlib.Path().absolute().joinpath(
+        'trial_results', 'csv', filename + '.csv')
     data_frame.to_csv(csv_path)
 
 
-
 def read_study_from_file(filename):
-    # read results from file with name=filename
+    # read results from file with name=filename and return the study object
     file_path = pathlib.Path().absolute().joinpath('trial_results', filename)
-    study = joblib.load(file_path)
-    return study.trials_dataframe()
+    return joblib.load(file_path)
+
+
+def generate_graphs_from_study(study):
+    # plot graph representing weight of each hyperparameter
+    figure = optuna.visualization.plot_param_importances(study)
+    figure.show()
+    # plot graph representing history of evaluation per trial
+    figure = optuna.visualization.plot_optimization_history(study)
+    figure.show()
+    # plot empirical distribution function of the result of the study
+    figure = optuna.visualization.plot_edf(study)
+    figure.show()
 
 
 if __name__ == '__main__':
-
-    #To conduct a study with n number of trials as parameter, comment this if you only want to read a
-    conduct_study(20)
-    #last_conducted_study = 'classifier_study_' + str(len(glob.glob('trial_results/*'))-1) + '.pkl'
-    #specify name of study_file to read from default folder or just read the last one
-    #data_frame = read_study_from_file(last_conducted_study)
-    #print(data_frame)
-
-
-
+    # To conduct a study with n number of trials as parameter, comment this if you only want to read a
+    study = conduct_study(100)
+    #study = read_study_from_file("classifier_study_0.pkl")
+    generate_graphs_from_study(study)
