@@ -12,7 +12,7 @@ import random
 
 def calculate_conv_output(W, K, P, S):
     return int((W-K+2*P)/S)+1
-    
+
 def calculate_flat_input(dim_1, dim_2, dim_3):
     return int(dim_1*dim_2*dim_3)
 
@@ -33,7 +33,7 @@ class ClassifierNet(nn.Module):
         """ CONV DIMENSIONS CALCULATIONS """
         self.conv_output_H = img_rows
         self.conv_output_W = img_cols
-        
+
 
         for _ in range(4):
             """ CONV DIMENSIONS CALCULATIONS """
@@ -67,7 +67,7 @@ class ClassifierNet(nn.Module):
             self.cuda()
         else:
             print("NO CUDA to activate")
-    
+
     def forward(self, x):
         x = F.relu(self.conv1(x.float()))
         x=self.pool1(x)
@@ -107,7 +107,7 @@ class Classifier:
         self.optimizer = optim.Adam(self.model.parameters() ,lr = learning_rate)
         self.criterion = nn.MSELoss()
 
-        
+
         self.batch_images = {}
         self.batch_labels = {}
         self.batch_path = {}
@@ -118,9 +118,23 @@ class Classifier:
         self.batch_path = {}
 
     #TODO implement randomized image augmentation
-    def image_augmentation(self, im):
-        return im
- 
+    def image_augmentation(self, image):
+
+        x = np.random.randint(0,3)
+        augImg = im
+
+        if x == 0:
+                augImg = image.transpose(method=Image.FLIP_LEFT_RIGHT)
+
+        elif x == 1:
+                augImg = image.transpose(method=Image.FLIP_TOP_BOTTOM)
+
+        elif x == 2:
+                deg = np.random.randint(0,360)
+                augImg = image.rotate(deg)
+
+        return augImg
+
     #TODO implement image visualizations
     def view_image(self):
 
@@ -132,7 +146,7 @@ class Classifier:
         im = Image.open(imagePath)
         im.thumbnail(self.image_size, Image.ANTIALIAS)
         im = np.array(im)
-        #TODO resize without converting to numpy array?
+        #TODO resize without converting to numpy array? --Possible to resize directly in Pillow
         im = cv2.resize(im, self.image_size)
         image = Image.fromarray(im, "RGB")
         image.show()
@@ -183,7 +197,7 @@ class Classifier:
     def plot_results(self):
         return None
 
-    def reset_epoch(self): 
+    def reset_epoch(self):
         tulip =  glob.glob("Flowers/tulip/*")
         sunflower =  glob.glob("Flowers/sunflower/*")
         rose =  glob.glob("Flowers/rose/*")
@@ -198,7 +212,7 @@ class Classifier:
 
     def save_weights(self, path):
         torch.save(self.model.state_dict(), path)
-    
+
     def predict(self, image):
         return self.model(image)
 
@@ -207,7 +221,7 @@ class Classifier:
         im = Image.open(imagePath)
         im.thumbnail(self.image_size, Image.ANTIALIAS)
         im = np.array(im)
-        im = cv2.resize(im, self.image_size) 
+        im = cv2.resize(im, self.image_size)
         im = torch.from_numpy(im).cuda().to(self.device)
         im = im.transpose(0,-1)
         im = im[None, :, :, :]
@@ -233,22 +247,22 @@ class Classifier:
         for i in range(self.batch_size):
             groups = list(self.paths.keys())
             group = random.choice(groups)
-            
+
             imagePath = np.random.choice(self.paths[group])
             # load the image, pre-process it, and store it in the data list
-            im = Image.open(imagePath)  
+            im = Image.open(imagePath)
             im.thumbnail(self.image_size, Image.ANTIALIAS)
             im = np.array(im)
             #TODO resize without converting to numpy array?
-            im = cv2.resize(im, self.image_size) 
+            im = cv2.resize(im, self.image_size)
             im = torch.from_numpy(im)
             if self.cuda:
                 im = im.cuda().to(self.device)
             #TODO implement transpose, rotate, etc, randomly
             im = im.transpose(0,-1)
-           
+
             im = im[None, :, :, :]
-           
+
 
             label = np.zeros(5)
 
@@ -267,7 +281,7 @@ class Classifier:
             self.batch_labels.update({str(counter): label})
             self.batch_path.update({str(counter): imagePath})
             counter+= 1
-    
+
     def train(self, number_of_epochs, number_of_batches):
         loss_list = []
         acc_list = []
@@ -327,13 +341,13 @@ def evaluation(Classifier, test_batch_size, prnt):
             im = Image.open(imagePath)
             im.thumbnail(Classifier.image_size, Image.ANTIALIAS)
             im = np.array(im)
-            im = cv2.resize(im, Classifier.image_size) 
+            im = cv2.resize(im, Classifier.image_size)
             im = torch.from_numpy(im)
             if Classifier.cuda:
                 im = im.cuda().to(Classifier.device)
             im = im.transpose(0,-1)
             im = im[None, :, :]
-            
+
 
             label = np.zeros(5)
 
@@ -352,10 +366,10 @@ def evaluation(Classifier, test_batch_size, prnt):
 
             batch_images.update({str(counter): im})
             batch_labels.update({str(counter): label})
-            
+
             counter+= 1
-    
-    
+
+
     correct = 0
     total = 0
 
@@ -365,7 +379,7 @@ def evaluation(Classifier, test_batch_size, prnt):
         predicted = torch.argmax(output)
         label = batch_labels[str(i)]
         label = torch.argmax(torch.Tensor([label]))
-        
+
 
         if predicted == label:
             correct += 1
@@ -385,11 +399,11 @@ def evaluation(Classifier, test_batch_size, prnt):
             elif label == 4:
                 errors[4] +=1
                 error_results.update({("tulip" +  str(errors[4])) : output } )
-        
+
         total += 1
     print("Cross validation:",correct/(total))
-    print("The agent managed", correct, "out of a total of:", total)      
-    if prnt:  
+    print("The agent managed", correct, "out of a total of:", total)
+    if prnt:
         print("Errors in daisy images:", errors[0], "out of", test_batch_size)
         print("Errors in dandelion images:", errors[1], "out of", test_batch_size)
         print("Errors in rose images:", errors[2], "out of", test_batch_size)
@@ -402,7 +416,7 @@ def evaluation(Classifier, test_batch_size, prnt):
             print(error ,":", error_results[error])
 
 
-#TODO Hyperparameters 
+#TODO Hyperparameters
 image_size = (224, 224)
 learning_rate = 0.0000134
 mini_batch_size = 32
@@ -417,7 +431,3 @@ TClassifier.train(epochs, step_size)
 #evaluation(TClassifier, 100, True)
 
 #DClassifier.load_images()
-
-
-
-
