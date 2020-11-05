@@ -313,7 +313,7 @@ class Classifier:
                     output = self.model(im)
                     label = self.batch_labels[str(i)]
                     label = torch.Tensor([label])
-                    if self.cuda:
+                    if self.cuda:   
                         label = label.cuda().to(self.device)
                     # TODO change to tensor in load_images
                     loss = self.criterion(output, label)
