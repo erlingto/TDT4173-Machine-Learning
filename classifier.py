@@ -153,8 +153,11 @@ class Classifier:
     #TODO implement randomized image augmentation
     def image_augmentation(self, image):
 
-        x = np.random.randint(0,3)
-        augImg = im
+        x = np.random.randint(0,10)
+        augImg = image
+
+        if x > 3:
+            return image
 
         if x == 0:
                 augImg = image.transpose(method=Image.FLIP_LEFT_RIGHT)
@@ -458,7 +461,7 @@ def objective(trial):
 
     cfg = {
         "image_size": trial.suggest_categorical('image_size', [(224, 224), (180, 180), (150, 150),
-                                                               (100, 100), (300, 300)]),
+                                                                (300, 300)]),
         # 0.000134,
         "learning_rate": trial.suggest_loguniform('lr', low=1e-6, high=1e-1),
         "mini_batch_size": 32,
