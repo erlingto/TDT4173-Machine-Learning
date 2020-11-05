@@ -532,8 +532,3 @@ def generate_graphs_from_study(study):
 
 
 if __name__ == '__main__':
-    # To conduct a study with n number of trials as parameter, comment this if you only want to read a
-    study = conduct_study(10)
-    #study = read_study_from_file("classifier_study_0.pkl")
-    generate_graphs_from_study(study)
-# test commentar
