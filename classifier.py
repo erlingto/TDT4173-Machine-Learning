@@ -17,6 +17,7 @@ import pathlib
 def calculate_conv_output(W, K, P, S):
     return int((W-K+2*P)/S)+1
 
+
 def calculate_flat_input(dim_1, dim_2, dim_3):
     return int(dim_1*dim_2*dim_3)
 
@@ -95,9 +96,10 @@ class ClassifierNet(nn.Module):
         x = F.relu(self.conv4(x.float()))
         x = self.pool4(x)
         x = F.relu(self.conv5(x.float()))
-        x=self.pool5(x)
-        x = x.view(-1, calculate_flat_input(1, self.conv_output_H, self.conv_output_W)*350)
-        x= self.linear(x)
+        x = self.pool5(x)
+        x = x.view(-1, calculate_flat_input(1,
+                                            self.conv_output_H, self.conv_output_W)*350)
+        x = self.linear(x)
         return x
 
 
@@ -150,28 +152,25 @@ class Classifier:
         self.batch_labels = {}
         self.batch_path = {}
 
-    #TODO implement randomized image augmentation
+    # TODO implement randomized image augmentation
     def image_augmentation(self, image):
 
-        x = np.random.randint(0,10)
+        x = np.random.randint(0, 3)
         augImg = image
 
-        if x > 3:
-            return image
-
         if x == 0:
-                augImg = image.transpose(method=Image.FLIP_LEFT_RIGHT)
+            augImg = image.transpose(method=Image.FLIP_LEFT_RIGHT)
 
         elif x == 1:
-                augImg = image.transpose(method=Image.FLIP_TOP_BOTTOM)
+            augImg = image.transpose(method=Image.FLIP_TOP_BOTTOM)
 
         elif x == 2:
-                deg = np.random.randint(0,360)
-                augImg = image.rotate(deg)
+            deg = np.random.randint(0, 360)
+            augImg = image.rotate(deg)
 
         return augImg
 
-    #TODO implement image visualizations
+    # TODO implement image visualizations
     def view_image(self):
 
         # open an image, resize it and print it
@@ -182,7 +181,7 @@ class Classifier:
         im = Image.open(imagePath)
         im.thumbnail(self.image_size, Image.ANTIALIAS)
         im = np.array(im)
-        #TODO resize without converting to numpy array? --Possible to resize directly in Pillow
+        # TODO resize without converting to numpy array? --Possible to resize directly in Pillow
         im = cv2.resize(im, self.image_size)
         image = Image.fromarray(im, "RGB")
         image.show()
@@ -328,7 +327,7 @@ class Classifier:
                     output = self.model(im)
                     label = self.batch_labels[str(i)]
                     label = torch.Tensor([label])
-                    if self.cuda:   
+                    if self.cuda:
                         label = label.cuda().to(self.device)
                     # TODO change to tensor in load_images
                     loss = self.criterion(output, label)
@@ -461,7 +460,7 @@ def objective(trial):
 
     cfg = {
         "image_size": trial.suggest_categorical('image_size', [(224, 224), (180, 180), (150, 150),
-                                                                (300, 300)]),
+                                                               (100, 100), (300, 300)]),
         # 0.000134,
         "learning_rate": trial.suggest_loguniform('lr', low=1e-6, high=1e-1),
         "mini_batch_size": 32,
@@ -537,3 +536,4 @@ if __name__ == '__main__':
     study = conduct_study(10)
     #study = read_study_from_file("classifier_study_0.pkl")
     generate_graphs_from_study(study)
+# test commentar
