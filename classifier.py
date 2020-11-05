@@ -120,18 +120,32 @@ class Classifier:
     #TODO implement randomized image augmentation
     def image_augmentation(self, image):
 
-        x = np.random.randint(0,3)
-        augImg = im
+        x = np.random.randint(0,12)
+        augImg = image
 
-        if x == 0:
-                augImg = image.transpose(method=Image.FLIP_LEFT_RIGHT)
+        #adjustable randomized selection of augmentation option
+        if x <= 3:
+                augImg = image.transpose(method=Image.FLIP_LEFT_RIGHT)  #flip around vertical axis
 
-        elif x == 1:
-                augImg = image.transpose(method=Image.FLIP_TOP_BOTTOM)
+        elif x > 3 and x <= 6:
+                augImg = image.transpose(method=Image.FLIP_TOP_BOTTOM)  #flip around horizontal axis
 
-        elif x == 2:
-                deg = np.random.randint(0,360)
+        elif x > 6 and x <= 9:
+                deg = np.random.randint(0,360)  #rotate random degrees
                 augImg = image.rotate(deg)
+
+        elif x > 9:
+
+                horizontal = np.random.randint(4,10)   #range of possible shift
+                vertical = np.random.randint(4,10)
+
+                a = 1
+                b = 0
+                d = 0
+                e = 1
+
+                augImg = image.transform(img.size, Image.AFFINE, (a, b, horizontal, d, e, vertical))
+
 
         return augImg
 
