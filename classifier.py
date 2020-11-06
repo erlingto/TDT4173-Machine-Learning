@@ -160,23 +160,36 @@ class Classifier:
     #TODO implement randomized image augmentation
     def image_augmentation(self, image):
 
-        x = np.random.randint(0,10)
+        x = np.random.randint(0,15)
         augImg = image
 
-        if x > 3:
+        if x > 12:
             return image
 
-        if x == 0:
-                augImg = image.transpose(method=Image.FLIP_LEFT_RIGHT)
+        #adjustable randomized selection of augmentation option
+        if x <= 3:
+                augImg = image.transpose(method=Image.FLIP_LEFT_RIGHT)  #flip around vertical axis
 
-        elif x == 1:
-                augImg = image.transpose(method=Image.FLIP_TOP_BOTTOM)
+        elif x > 3 and x <= 6:
+                augImg = image.transpose(method=Image.FLIP_TOP_BOTTOM)  #flip around horizontal axis
 
-        elif x == 2:
-                deg = np.random.randint(0,360)
+        elif x > 6 and x <= 9:
+                deg = np.random.randint(0,360)  #rotate random degrees
                 augImg = image.rotate(deg)
 
+        elif x > 9 and x <= 12 :
+
+                horizontal = np.random.randint(4,10)   #range of possible shift
+                vertical = np.random.randint(4,10)
+
+                a = 1
+                b = 0
+                d = 0
+                e = 1
+
+                augImg = image.transform(image.size, Image.AFFINE, (a, b, horizontal, d, e, vertical))
         return augImg
+
 
     #TODO implement image visualizations
     def view_image(self):
@@ -325,7 +338,7 @@ class Classifier:
             self.batch_path.update({str(counter): imagePath})
             counter += 1
 
-    def train(self, trial, number_of_epochs, number_of_batches, test_batch_size):
+    def train(self, number_of_epochs, number_of_batches, test_batch_size):
         loss_list = []
         acc_list = []
         for epoch in range(number_of_epochs):
@@ -366,9 +379,9 @@ class Classifier:
             # TODO: implement limit of testing size
             accuracy = evaluation(self, test_batch_size, False)
             # report accuracy of model now and evaluate if the current trial should prune
-            trial.report(accuracy, epoch)
-            if trial.should_prune():
-                raise optuna.exceptions.TrialPruned()
+            #trial.report(accuracy, epoch)
+            #if trial.should_prune():
+            #    raise optuna.exceptions.TrialPruned()
             self.reset_epoch()
         if(self.save_weights):
             self.save_weights("Classifier")
@@ -472,16 +485,16 @@ def objective(trial):
         "image_size": trial.suggest_categorical('image_size', [(224, 224), (180, 180), (150, 150),
                                                                 (300, 300)]),
         # 0.000134,
-        "learning_rate": trial.suggest_loguniform('lr', low=1e-6, high=1e-2),
+        "learning_rate": trial.suggest_loguniform('lr', low=1e-6, high=1e-4),
         "mini_batch_size": 32,
         "test_batch_size": 150,
         "step_size": 32,
-        "epochs": trial.suggest_int('epochs', low=30, high=60, step=5),
+        "epochs": trial.suggest_int('epochs', low=50, high=60, step=5),
         # trial.suggest_categorical('dropout', [True, False]),
         "dropout": True,
         "dropout_rate": trial.suggest_discrete_uniform('droput_rate', low=0.1, high=0.5, q=0.1),
         "prnt": False,
-        "optimizer": trial.suggest_categorical('optimizer', [optim.Adam, optim.SGD, optim.RMSprop]),
+        "optimizer": trial.suggest_categorical('optimizer', [optim.Adam, optim.SGD]),
         "criterion": nn.MSELoss(),
         "save_weights": False
     }
@@ -545,7 +558,30 @@ def generate_graphs_from_study(study):
 
 
 if __name__ == '__main__':
+    cfg = {
+        "image_size": (224, 224),                                          
+        "learning_rate": 6.34192248576476e-05,
+        "mini_batch_size": 32,
+        "test_batch_size": 150,
+        "step_size": 32,
+        "epochs": 200,
+        # trial.suggest_categorical('dropout', [True, False]),
+        "dropout": True,
+        "dropout_rate": 0.4,
+        "prnt": False,
+        "optimizer": optim.Adam,
+        "criterion": nn.MSELoss(),
+        "save_weights": True
+    }
     # To conduct a study with n number of trials as parameter, comment this if you only want to read a
-    study = conduct_study(10)
+    TClassifier = Classifier(cfg)
+    TClassifier.load_weights('classifier')
+    TClassifier.load_images()
+    TClassifier.train(cfg["epochs"],
+                      cfg["step_size"], cfg["test_batch_size"])
     #study = read_study_from_file("classifier_study_0.pkl")
-    generate_graphs_from_study(study)
+    EvClassifier = Classifier(cfg)
+    EvClassifier.copy_weights(TClassifier)
+    accuracy = evaluation(EvClassifier, cfg["test_batch_size"], cfg["prnt"])
+
+    
