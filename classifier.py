@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
+from torchvision import datasets, transforms
 import torch.optim as optim
 from imutils import paths
 import cv2
@@ -13,6 +14,10 @@ import optuna
 import joblib
 import pathlib
 
+def standardize_image(image): 
+    image = transforms.ToTensor()(image) 
+    image = transforms.Normalize(mean=[0.4557, 0.4188, 0.2996], std=[0.2510, 0.2236, 0.2287])(image) #calculated mean and std for whole dataset  
+    return image
 
 def calculate_conv_output(W, K, P, S):
     return int((W-K+2*P)/S)+1
@@ -27,19 +32,19 @@ class ClassifierNet(nn.Module):
 
         super(ClassifierNet, self).__init__()
         self.conv1 = nn.Conv2d(
-            in_channels=3, out_channels=24, kernel_size=3, stride=1, padding=0)
+            in_channels=3, out_channels=24, kernel_size=3, stride=1, padding=1)
         self.pool1 = nn.MaxPool2d(2, 2, padding=0)
         self.conv2 = nn.Conv2d(
-            in_channels=24, out_channels=48, kernel_size=3, stride=1, padding=0)
+            in_channels=24, out_channels=48, kernel_size=3, stride=1, padding=1)
         self.pool2 = nn.MaxPool2d(2, 2, padding=0)
         self.conv3 = nn.Conv2d(
-            in_channels=48, out_channels=96, kernel_size=3, stride=1, padding=0)
+            in_channels=48, out_channels=96, kernel_size=3, stride=1, padding=1)
         self.pool3 = nn.MaxPool2d(2, 2, padding=0)
         self.conv4 = nn.Conv2d(
-            in_channels=96, out_channels=192, kernel_size=3, stride=1, padding=0)
+            in_channels=96, out_channels=192, kernel_size=3, stride=1, padding=1)
         self.pool4 = nn.MaxPool2d(2, 2, padding=0)
         self.conv5 = nn.Conv2d(
-            in_channels=192, out_channels=350, kernel_size=3, stride=1, padding=0)
+            in_channels=192, out_channels=350, kernel_size=3, stride=1, padding=1)
         self.pool5 = nn.MaxPool2d(2, 2, padding=0)
         """ CONV DIMENSIONS CALCULATIONS """
         self.conv_output_H = img_rows
@@ -48,17 +53,17 @@ class ClassifierNet(nn.Module):
         for _ in range(4):
             """ CONV DIMENSIONS CALCULATIONS """
             self.conv_output_H = calculate_conv_output(
-                self.conv_output_H, 3, 0, 1)
+                self.conv_output_H, 3, 1, 1)
             self.conv_output_W = calculate_conv_output(
-                self.conv_output_W, 3, 0, 1)
+                self.conv_output_W, 3, 1, 1)
             """ POOLING DIMENSIONS CALCULATIONS """
             self.conv_output_H = calculate_conv_output(
                 self.conv_output_H, 2, 0, 2)
             self.conv_output_W = calculate_conv_output(
                 self.conv_output_W, 2, 0, 2)
 
-        self.conv_output_H = calculate_conv_output(self.conv_output_H, 3, 0, 1)
-        self.conv_output_W = calculate_conv_output(self.conv_output_W, 3, 0, 1)
+        self.conv_output_H = calculate_conv_output(self.conv_output_H, 3, 1, 1)
+        self.conv_output_W = calculate_conv_output(self.conv_output_W, 3, 1, 1)
         """ POOLING DIMENSIONS CALCULATIONS """
         self.conv_output_H = calculate_conv_output(self.conv_output_H, 2, 0, 2)
         self.conv_output_W = calculate_conv_output(self.conv_output_W, 2, 0, 2)
@@ -71,6 +76,7 @@ class ClassifierNet(nn.Module):
                     1, self.conv_output_H, self.conv_output_W)*350,  1024), nn.ReLU(True),
                 nn.Dropout(p=dropout_rate),
                 nn.Linear(1024, 5),
+                nn.Softmax(dim=1)
             )
         else:
             self.linear = nn.Sequential(
@@ -78,6 +84,7 @@ class ClassifierNet(nn.Module):
                     1, self.conv_output_H, self.conv_output_W)*350,  1024), nn.ReLU(True),
                 nn.Dropout(0),
                 nn.Linear(1024, 5),
+                nn.Softmax(dim=1)
             )
         if torch.cuda.is_available():
             self.cuda()
@@ -180,10 +187,15 @@ class Classifier:
                 d = 0
                 e = 1
 
+<<<<<<< HEAD
                 augImg = image.transform(img.size, Image.AFFINE, (a, b, horizontal, d, e, vertical))
 
 
+=======
+                augImg = image.transform(image.size, Image.AFFINE, (a, b, horizontal, d, e, vertical))
+>>>>>>> standard
         return augImg
+
 
     #TODO implement image visualizations
     def view_image(self):
@@ -261,6 +273,9 @@ class Classifier:
         self.model.load_state_dict(torch.load(path))
         self.name = path
 
+    def copy_weights(self, TrainNet):
+        self.model.load_state_dict(TrainNet.model.state_dict())
+
     def save_weights(self, path):
         torch.save(self.model.state_dict(), path)
 
@@ -290,7 +305,7 @@ class Classifier:
             print("Bildet er av en tulip")
         print(predicted)
         return predicted
-
+       
     def load_images(self):
         counter = 0
         for i in range(self.batch_size):
@@ -301,17 +316,16 @@ class Classifier:
             # load the image, pre-process it, and store it in the data list
             im = Image.open(imagePath)
             im.thumbnail(self.image_size, Image.ANTIALIAS)
+            im = self.image_augmentation(im)
             im = np.array(im)
             # TODO resize without converting to numpy array?
             im = cv2.resize(im, self.image_size)
-            im = torch.from_numpy(im)
+            im = standardize_image(im)
             if self.cuda:
                 im = im.cuda().to(self.device)
             # TODO implement transpose, rotate, etc, randomly
-            im = im.transpose(0, -1)
 
             im = im[None, :, :, :]
-
             label = np.zeros(5)
 
             if group == "daisy":
@@ -330,7 +344,7 @@ class Classifier:
             self.batch_path.update({str(counter): imagePath})
             counter += 1
 
-    def train(self, trial, number_of_epochs, number_of_batches, test_batch_size):
+    def train(self, number_of_epochs, number_of_batches, test_batch_size):
         loss_list = []
         acc_list = []
         for epoch in range(number_of_epochs):
@@ -340,6 +354,7 @@ class Classifier:
                     # Run the forward pass
                     im = self.batch_images[str(i)]
                     output = self.model(im)
+                    
                     label = self.batch_labels[str(i)]
                     label = torch.Tensor([label])
                     if self.cuda:   
@@ -370,9 +385,9 @@ class Classifier:
             # TODO: implement limit of testing size
             accuracy = evaluation(self, test_batch_size, False)
             # report accuracy of model now and evaluate if the current trial should prune
-            trial.report(accuracy, epoch)
-            if trial.should_prune():
-                raise optuna.exceptions.TrialPruned()
+            #trial.report(accuracy, epoch)
+            #if trial.should_prune():
+            #    raise optuna.exceptions.TrialPruned()
             self.reset_epoch()
         if(self.save_weights):
             self.save_weights("Classifier")
@@ -398,11 +413,10 @@ def evaluation(Classifier, test_batch_size, prnt):
             im.thumbnail(Classifier.image_size, Image.ANTIALIAS)
             im = np.array(im)
             im = cv2.resize(im, Classifier.image_size)
-            im = torch.from_numpy(im)
+            im = standardize_image(im)
             if Classifier.cuda:
                 im = im.cuda().to(Classifier.device)
-            im = im.transpose(0, -1)
-            im = im[None, :, :]
+            im = im[None, :, :, :]
 
             label = np.zeros(5)
 
@@ -477,16 +491,16 @@ def objective(trial):
         "image_size": trial.suggest_categorical('image_size', [(224, 224), (180, 180), (150, 150),
                                                                 (300, 300)]),
         # 0.000134,
-        "learning_rate": trial.suggest_loguniform('lr', low=1e-6, high=1e-1),
+        "learning_rate": trial.suggest_loguniform('lr', low=1e-6, high=1e-4),
         "mini_batch_size": 32,
-        "test_batch_size": 100,
+        "test_batch_size": 150,
         "step_size": 32,
-        "epochs": trial.suggest_int('epochs', low=30, high=60, step=5),
+        "epochs": trial.suggest_int('epochs', low=50, high=60, step=5),
         # trial.suggest_categorical('dropout', [True, False]),
         "dropout": True,
         "dropout_rate": trial.suggest_discrete_uniform('droput_rate', low=0.1, high=0.5, q=0.1),
         "prnt": False,
-        "optimizer": trial.suggest_categorical('optimizer', [optim.Adam, optim.SGD, optim.RMSprop]),
+        "optimizer": trial.suggest_categorical('optimizer', [optim.Adam, optim.SGD]),
         "criterion": nn.MSELoss(),
         "save_weights": False
     }
@@ -496,7 +510,10 @@ def objective(trial):
     TClassifier.load_images()
     TClassifier.train(trial, cfg["epochs"],
                       cfg["step_size"], cfg["test_batch_size"])
-    accuracy = evaluation(TClassifier, cfg["test_batch_size"], cfg["prnt"])
+    cfg["dropout"] = False
+    EvClassifier = Classifier(cfg)
+    EvClassifier.copy_weights(TClassifier)
+    accuracy = evaluation(EvClassifier, cfg["test_batch_size"], cfg["prnt"])
     return accuracy
 
 
@@ -547,7 +564,30 @@ def generate_graphs_from_study(study):
 
 
 if __name__ == '__main__':
+    cfg = {
+        "image_size": (224, 224),                                          
+        "learning_rate": 6.34192248576476e-05,
+        "mini_batch_size": 32,
+        "test_batch_size": 150,
+        "step_size": 32,
+        "epochs": 200,
+        # trial.suggest_categorical('dropout', [True, False]),
+        "dropout": True,
+        "dropout_rate": 0.4,
+        "prnt": False,
+        "optimizer": optim.Adam,
+        "criterion": nn.MSELoss(),
+        "save_weights": True
+    }
     # To conduct a study with n number of trials as parameter, comment this if you only want to read a
-    study = conduct_study(10)
+    TClassifier = Classifier(cfg)
+    TClassifier.load_weights('classifier')
+    TClassifier.load_images()
+    TClassifier.train(cfg["epochs"],
+                      cfg["step_size"], cfg["test_batch_size"])
     #study = read_study_from_file("classifier_study_0.pkl")
-    generate_graphs_from_study(study)
+    EvClassifier = Classifier(cfg)
+    EvClassifier.copy_weights(TClassifier)
+    accuracy = evaluation(EvClassifier, cfg["test_batch_size"], cfg["prnt"])
+
+    
