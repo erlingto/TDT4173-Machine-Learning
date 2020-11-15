@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
+import variables
 
 def find_std_and_mean():
     dataset = datasets.ImageFolder('Flowers', transform = transforms.ToTensor())
@@ -33,7 +34,7 @@ def find_std_and_mean():
 def standardize_images():
     transform = transform = transforms.Compose([transforms.ToTensor(),
     transforms.Normalize(mean=[0.4557, 0.4188, 0.2996], std=[0.2510, 0.2236, 0.2287]))
-    dataset = datasets.ImageFolder('Flowers', transform = transform)
+    dataset = datasets.ImageFolder(variables.train_set_path, transform = transform)
 
     print(dataset)
     loader = DataLoader(
