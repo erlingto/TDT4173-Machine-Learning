@@ -25,6 +25,7 @@ test_set_path_by_category = {"tulip": glob.glob(test_set_path + "/tulip/*"),
                              "dandelion":  glob.glob(test_set_path + "/dandelion/*"),
                              "daisy":  glob.glob(test_set_path + "/daisy/*")}
 
+saved_weights_path = "Models"
 
 ##Normalization
 

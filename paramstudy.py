@@ -26,9 +26,9 @@ def objective(trial):
         # 0.000134,
         "learning_rate": trial.suggest_loguniform('lr', low=1e-6, high=1e-4),
         "mini_batch_size": 32,
-        "test_batch_size": 150,
-        "step_size": 32,
-        "epochs": trial.suggest_int('epochs', low=50, high=60, step=5),
+        "test_batch_size": 20,
+        "step_size": 5,
+        "epochs": 2,#trial.suggest_int('epochs', low=50, high=60, step=5),
         # trial.suggest_categorical('dropout', [True, False]),
         "dropout": True,
         "dropout_rate": trial.suggest_discrete_uniform('droput_rate', low=0.1, high=0.5, q=0.1),
@@ -52,7 +52,7 @@ def objective(trial):
     return accuracy
 
 
-def conduct_study(n_trials):    
+def conduct_study(n_trials, classifier_type):    
     # Conduct a study with n numbers of trials
 
     # choose a sampler. Docs here: https://optuna.readthedocs.io/en/stable/reference/samplers.html#module-optuna.samplers
@@ -60,7 +60,7 @@ def conduct_study(n_trials):
     # choose a pruner. Docs here: https://optuna.readthedocs.io/en/stable/reference/pruners.html
     pruner = optuna.pruners.MedianPruner()
     study = optuna.create_study(
-        sampler=sampler, direction='maximize', pruner=pruner)
+        sampler=sampler, direction='maximize', pruner=pruner, study_name=classifier_type)
     study.optimize(objective, n_trials=n_trials)
     save_study_to_file(study)
     return study
@@ -68,7 +68,7 @@ def conduct_study(n_trials):
 
 def save_study_to_file(study):
     # save results as a joblib dump
-    filename = 'classifier_study_' + str(len(glob.glob('trial_results/*')))
+    filename = study.study_name + '_study_' + str(len(glob.glob(variables.study_result_path + '/*')))
     file_path = pathlib.Path().absolute().joinpath(
         variables.study_result_path, filename + '.pkl')
     joblib.dump(study, file_path)
@@ -96,19 +96,3 @@ def generate_graphs_from_study(study):
     figure = optuna.visualization.plot_edf(study)
     figure.show()
 
-
-if __name__ == '__main__':
-    cfg = variables.convpool_cfg
-    # To conduct a study with n number of trials as parameter, comment this if you only want to read a
-    TClassifier = Classifier(cfg)
-    #TClassifier.load_weights('classifier')
-    TClassifier.load_images()
-    
-    #accuracy = capsnet_evaluation(TClassifier, 50, cfg["prnt"])
-    TClassifier.train(cfg["epochs"],
-                      cfg["step_size"], cfg["test_batch_size"])
-    TClassifier.plot_loss()
-    #study = read_study_from_file("classifier_study_0.pkl")
-    EvClassifier = Classifier(cfg)
-    EvClassifier.copy_weights(TClassifier)
-    accuracy = evaluation(EvClassifier, cfg["test_batch_size"], cfg["prnt"])

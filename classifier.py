@@ -97,16 +97,6 @@ class Classifier:
         #optimizer
         self.optimizer = optimizer(self.model.parameters(), lr=learning_rate)
 
-        # Todo generalize classifier, take out paths maybe in a data loader function and pass it to classifier
-        '''
-        tulip = glob.glob(variables.train_set_path + "/tulip/*")
-        sunflower = glob.glob(variables.train_set_path + "/sunflower/*")
-        rose = glob.glob(variables.train_set_path + "/rose/*")
-        dandelion = glob.glob(variables.train_set_path + "/dandelion/*")
-        daisy = glob.glob(variables.train_set_path + "/daisy/*")
-        self.paths = {"tulip": tulip, "sunflower": sunflower,
-                      "rose": rose, "dandelion": dandelion, "daisy": daisy}
-        '''
         self.paths = variables.train_set_paths_by_category
         #images and labels
         self.batch_images = {}
@@ -204,17 +194,6 @@ class Classifier:
         return None
 
     def reset_epoch(self):
-        # TODO Generalize reset function
-        '''
-        tulip = glob.glob("Flowers/tulip/*")
-        sunflower = glob.glob("Flowers/sunflower/*")
-        rose = glob.glob("Flowers/rose/*")
-        dandelion = glob.glob("Flowers/dandelion/*")
-        daisy = glob.glob("Flowers/daisy/*")
-
-        self.paths = {"tulip": tulip, "sunflower": sunflower,
-                      "rose": rose, "dandelion": dandelion, "daisy": daisy}
-        '''
         self.paths = variables.train_set_paths_by_category
 
     def load_weights(self, path):
@@ -328,7 +307,7 @@ class Classifier:
                     raise optuna.exceptions.TrialPruned()
             self.reset_epoch()
         if(self.save):
-            self.save_weights("CapsNet")
+            self.save_weights(variables.saved_weights_path + "/CapsNet")
 
     def train_ConvPool(self, trial, number_of_epochs, number_of_batches, test_batch_size):
         
@@ -380,19 +359,10 @@ class Classifier:
                     raise optuna.exceptions.TrialPruned()
             self.reset_epoch()
         if(self.save):
-            self.save_weights("ConvPool")
+            self.save_weights(variables.saved_weights_path + "/ConvPool")
 
 
 def evaluation(Classifier, test_batch_size, prnt):
-    '''
-    tulip = glob.glob("Test_Flowers/tulip/*")
-    sunflower = glob.glob("Test_Flowers/sunflower/*")
-    rose = glob.glob("Test_Flowers/rose/*")
-    dandelion = glob.glob("Test_Flowers/dandelion/*")
-    daisy = glob.glob("Test_Flowers/daisy/*")
-    paths = {"tulip": tulip, "sunflower": sunflower,
-             "rose": rose, "dandelion": dandelion, "daisy": daisy}
-    '''
     paths = variables.train_set_paths_by_category        
     groups = list(paths.keys())
     counter = 0
