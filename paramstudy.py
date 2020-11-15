@@ -15,9 +15,10 @@ import optuna
 import joblib
 import pathlib
 from classifier import Classifier, evaluation
+import variables
 
 def objective(trial):
-
+    
     cfg = {
         "type": "ConvPool", #CapsNet or ConvPool
         "image_size": trial.suggest_categorical('image_size', [(224, 224), (180, 180), (150, 150),
@@ -37,6 +38,7 @@ def objective(trial):
         "save_weights": False
         
     }
+    
     print("Beginning Trial nr. " + str(trial.number) + " with params:")
     print(trial.params)
     TClassifier = Classifier(cfg)
@@ -68,19 +70,18 @@ def save_study_to_file(study):
     # save results as a joblib dump
     filename = 'classifier_study_' + str(len(glob.glob('trial_results/*')))
     file_path = pathlib.Path().absolute().joinpath(
-        'trial_results', filename + '.pkl')
-    print(len(glob.glob('\trial_result*')))
+        variables.study_result_path, filename + '.pkl')
     joblib.dump(study, file_path)
     # Save a copy as a csv file
     data_frame = study.trials_dataframe()
     csv_path = pathlib.Path().absolute().joinpath(
-        'trial_results', 'csv', filename + '.csv')
+        variables.study_csv_path, filename + '.csv')
     data_frame.to_csv(csv_path)
 
 
 def read_study_from_file(filename):
     # read results from file with name=filename and return the study object
-    file_path = pathlib.Path().absolute().joinpath('trial_results', filename)
+    file_path = pathlib.Path().absolute().joinpath(variables.study_result_path, filename)
     return joblib.load(file_path)
 
 
@@ -97,22 +98,7 @@ def generate_graphs_from_study(study):
 
 
 if __name__ == '__main__':
-    cfg = {
-        "type": "ConvPool", #CapsNet or ConvPool
-        "image_size": (100, 100), # (X, Y)                                         
-        "learning_rate": 6.34192248576476e-05,
-        "mini_batch_size": 15, #Amount of images per batch
-        "test_batch_size": 20, #Images per category to test on
-        "step_size": 10, #Amount of batches per Epoch
-        "epochs": 3,
-        # trial.suggest_categorical('dropout', [True, False]),
-        "dropout": True,
-        "dropout_rate": 0.4,
-        "prnt": True,
-        "optimizer": optim.Adam,
-        "criterion": nn.MSELoss(),
-        "save_weights": True
-    }
+    cfg = variables.convpool_cfg
     # To conduct a study with n number of trials as parameter, comment this if you only want to read a
     TClassifier = Classifier(cfg)
     #TClassifier.load_weights('classifier')

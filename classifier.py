@@ -15,12 +15,14 @@ import random
 import optuna
 import joblib
 import pathlib
+import variables
 #models
-import models
+import cnn_model
+import capsnet_model
 
 def standardize_image(image): 
         image = transforms.ToTensor()(image) 
-        image = transforms.Normalize(mean=[0.4557, 0.4188, 0.2996], std=[0.2510, 0.2236, 0.2287])(image) #calculated mean and standard deviation for whole dataset  
+        image = transforms.Normalize(mean=variables.mean, std=variables.std)(image) #calculated mean and standard deviation for whole dataset  
         return image
 
 def image_augmentation(image):
@@ -88,22 +90,24 @@ class Classifier:
         # Model type 
         self.type = model_type
         if self.type == "CapsNet":
-            self.model = models.CapsNet()
+            self.model = capsnet_model.CapsNet()
         elif self.type == "ConvPool":
-            self.model = models.ClassifierNet(self.image_size[0], self.image_size[1], dropout, dropout_rate)
+            self.model = cnn_model.ClassifierNet(self.image_size[0], self.image_size[1], dropout, dropout_rate)
 
         #optimizer
         self.optimizer = optimizer(self.model.parameters(), lr=learning_rate)
 
         # Todo generalize classifier, take out paths maybe in a data loader function and pass it to classifier
-        tulip = glob.glob("Flowers/tulip/*")
-        sunflower = glob.glob("Flowers/sunflower/*")
-        rose = glob.glob("Flowers/rose/*")
-        dandelion = glob.glob("Flowers/dandelion/*")
-        daisy = glob.glob("Flowers/daisy/*")
+        '''
+        tulip = glob.glob(variables.train_set_path + "/tulip/*")
+        sunflower = glob.glob(variables.train_set_path + "/sunflower/*")
+        rose = glob.glob(variables.train_set_path + "/rose/*")
+        dandelion = glob.glob(variables.train_set_path + "/dandelion/*")
+        daisy = glob.glob(variables.train_set_path + "/daisy/*")
         self.paths = {"tulip": tulip, "sunflower": sunflower,
                       "rose": rose, "dandelion": dandelion, "daisy": daisy}
-
+        '''
+        self.paths = variables.train_set_paths_by_category
         #images and labels
         self.batch_images = {}
         self.batch_labels = {}
@@ -201,6 +205,7 @@ class Classifier:
 
     def reset_epoch(self):
         # TODO Generalize reset function
+        '''
         tulip = glob.glob("Flowers/tulip/*")
         sunflower = glob.glob("Flowers/sunflower/*")
         rose = glob.glob("Flowers/rose/*")
@@ -209,6 +214,8 @@ class Classifier:
 
         self.paths = {"tulip": tulip, "sunflower": sunflower,
                       "rose": rose, "dandelion": dandelion, "daisy": daisy}
+        '''
+        self.paths = variables.train_set_paths_by_category
 
     def load_weights(self, path):
         self.model.load_state_dict(torch.load(path))
@@ -228,7 +235,6 @@ class Classifier:
         for i in range(self.batch_size):
             groups = list(self.paths.keys())
             group = random.choice(groups)
-
             imagePath = np.random.choice(self.paths[group])
             # load the image, pre-process it, and store it in the data list
             im = Image.open(imagePath)
@@ -378,6 +384,7 @@ class Classifier:
 
 
 def evaluation(Classifier, test_batch_size, prnt):
+    '''
     tulip = glob.glob("Test_Flowers/tulip/*")
     sunflower = glob.glob("Test_Flowers/sunflower/*")
     rose = glob.glob("Test_Flowers/rose/*")
@@ -385,6 +392,8 @@ def evaluation(Classifier, test_batch_size, prnt):
     daisy = glob.glob("Test_Flowers/daisy/*")
     paths = {"tulip": tulip, "sunflower": sunflower,
              "rose": rose, "dandelion": dandelion, "daisy": daisy}
+    '''
+    paths = variables.train_set_paths_by_category        
     groups = list(paths.keys())
     counter = 0
     batch_images = {}
