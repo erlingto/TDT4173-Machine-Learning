@@ -19,20 +19,22 @@ if __name__ == '__main__':
     if args.study:
         # To conduct a study with n number of trials as parameter and the type of the model
         paramstudy.conduct_study(args.n_trials, args.type)
+        exit()
 
-    elif args.train:
-        cfg = variables.convpool_cfg
-        TClassifier = classifier.Classifier(cfg)
-        if args.load_weights:
-            TClassifier.load_weights('classifier')
-        TClassifier.load_images()
-    
+    cfg = variables.convpool_cfg
+    TClassifier = classifier.Classifier(cfg)
+    TClassifier.load_images()
+    if args.load_weights:
+        TClassifier.load_weights('classifier')
+    if args.train:
         TClassifier.train(cfg["epochs"],
                       cfg["step_size"], cfg["test_batch_size"])
         if args.plot:
             TClassifier.plot_loss()
 
-        #To remove
-        EvClassifier = classifier.Classifier(cfg)
-        EvClassifier.copy_weights(TClassifier)
-        accuracy = classifier.evaluation(EvClassifier, cfg["test_batch_size"], cfg["prnt"])
+    #To remove
+    EvClassifier = classifier.Classifier(cfg)
+    EvClassifier.copy_weights(TClassifier)
+    accuracy = classifier.evaluation(EvClassifier, cfg["test_batch_size"], cfg["prnt"])
+
+
