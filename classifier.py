@@ -20,6 +20,9 @@ import variables
 import cnn_model
 import capsnet_model
 
+USE_CUDA = True if torch.cuda.is_available() else False
+USE_CUDA = False
+
 def standardize_image(image): 
         image = transforms.ToTensor()(image) 
         image = transforms.Normalize(mean=variables.mean, std=variables.std)(image) #calculated mean and standard deviation for whole dataset  
@@ -70,7 +73,8 @@ class Classifier:
         save_weights = cfg['save_weights']
         model_type = cfg['type'] #CapsNet or ConvPool
 
-        if torch.cuda.is_available():
+
+        if USE_CUDA:
             self.device = torch.device("cuda:0")
             self.cuda = True
             print("Cuda available")
@@ -297,7 +301,7 @@ class Classifier:
             self.model.eval()
             #Evaluate on test set
             accuracy = evaluation(self, 50, False)
-            self.test_acc.append(accuracy)
+            self.test_acc_list.append(accuracy)
             #Turn model training mode back on
             self.model.train()
             # report accuracy of model now and evaluate if the current trial should prune

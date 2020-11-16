@@ -43,7 +43,7 @@ convpool_cfg =  {
         "mini_batch_size": 32, #Amount of images per batch
         "test_batch_size": 20, #Images per category to test on
         "step_size": 32, #Amount of batches per Epoch
-        "epochs": 3,
+        "epochs": 200,
         # trial.suggest_categorical('dropout', [True, False]),
         "dropout": True,
         "dropout_rate": 0.4,
@@ -54,12 +54,12 @@ convpool_cfg =  {
     }
 capsnet_cfg = {
         "type": "CapsNet", #CapsNet or ConvPool
-        "image_size": (28, 28), # (X, Y)                                         
-        "learning_rate": 6.34192248576476e-05,
+        "image_size": (100, 100), # (X, Y)                                         
+        "learning_rate": 6.34192248576476e-03,
         "mini_batch_size": 32, #Amount of images per batch
         "test_batch_size": 20, #Images per category to test on
         "step_size": 32, #Amount of batches per Epoch
-        "epochs": 3,
+        "epochs": 50,
         # trial.suggest_categorical('dropout', [True, False]),
         "dropout": True,
         "dropout_rate": 0.4,

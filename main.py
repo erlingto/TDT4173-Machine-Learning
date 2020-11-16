@@ -21,7 +21,10 @@ if __name__ == '__main__':
         paramstudy.conduct_study(args.n_trials, args.type)
 
     elif args.train:
-        cfg = variables.convpool_cfg
+        if (args.type == "capsnet"):
+            cfg = variables.capsnet_cfg
+        elif (args.type == "convpool"):
+            cfg = variables.convpool_cfg
         TClassifier = classifier.Classifier(cfg)
         if args.load_weights:
             TClassifier.load_weights('classifier')
