@@ -11,6 +11,8 @@ Both the implementations supports the use of a CUDA enabled graphic card for spe
 
 ### Train and Evaluate
 In this mode, the program will train the selected model on the whished parameters. The program gives the possibility to save and load trained classifier weights. There are options for plotting statistics about the training prosess like the loss plot per epoch. 
+The program then proceedes to evaluate the model.
+The training phase can be skipped, in that case the program will only evaluate the model.
 
 ### Conduct a study 
 In this mode, the program will conduct a study on the selected classifier for finding the best hyperparameters. Both the number of trials and hyperparameters' value range is configurable.
@@ -46,12 +48,85 @@ If you use a Python version older then  3.2, run this program for installing ult
 ## User Guide
 Run "main.py" for starting the program. The "main.py" script accepts the following parameters:
 * **--type** (""convpool" or "capsnet") Which model to run. Default is "convpool".
-* **--mode** ("train" or "study") Which mode to run. Default is "train".
-* **--load_weights** (True or false) Wether to load the previuosly saved weights or not. Default is False.
+* **--train** (True or false) Wether to train or not under the "Train and Evaluate" mode. Default is True.
+* **--load_weights** (True or false) Wether to load the previuosly saved weights or not when in "Train and Evaluate" mode. Default is False.
 * **--plot** (True or false) Wether to plot graphs after training process or not. Default is True.
-* **--n_trials** (Int value) Number of trials when in study mode. Default is 10.
-* **--use_cuda** (True or false) Wether do tensions operations on GPU or CPU. Default is False.
+* **--study** (True or False) Wether to run in "Conduct a study" mode or not. This will overwrite the --train parameter. Default is False.
+* **--n_trials** (Int value) Number of trials when in "Conduct a study" mode. Default is 10.
 
+### Some examples of use:
+
+* "**python main.py**". This will run the program in "Train and Evaluate" mode on the "convpool" model without either skipping training nor loading weights. 
+* "**python main.py --type=convpool --train=False --load_weights=True**". The program will load the weigts of a previously trained "capsnet" model and will evaluate on it without training it first.
+* "**python main.py --study=True --n_trials=100**". With this command, the program will then conduct a study with 100 trials on a convpool model.
+
+### Variables
+#### Train and Evaluate mode
+The variables for both convpool and capsnett models are found in the "variables.py" file.
+```
+variables.py
+...
+convpool_cfg =  {
+        "type": "ConvPool", #CapsNet or ConvPool
+        "image_size": (100, 100), # (X, Y)                                         
+        "learning_rate": 6.34192248576476e-05,
+        "mini_batch_size": 32, #Amount of images per batch
+        "test_batch_size": 20, #Images per category to test on
+        "step_size": 32, #Amount of steps per Epoch
+        "epochs": 200,
+        "dropout": True,
+        "dropout_rate": 0.4,
+        "prnt": True,  #Print more informations about the errors after evaluation
+        "optimizer": optim.Adam,
+        "criterion": nn.MSELoss(),
+        "save_weights": True
+    }
+
+### Settings for tweaking training and testing with Capsule neural network
+capsnet_cfg = {
+        "type": "CapsNet", #CapsNet or ConvPool
+        "image_size": (100, 100), # (X, Y)                                         
+        "learning_rate": 0.0077,
+        "mini_batch_size": 10, #Amount of images per batch
+        "test_batch_size": 20, #Images per category to test on
+        "step_size": 10, #Amount of steps per Epoch
+        "epochs": 50,
+        "dropout": True,
+        "dropout_rate": 0.4,
+        "prnt": True, #Print more informations about the errors after evaluation
+        "optimizer": optim.Adam,
+        "criterion": nn.MSELoss(),
+        "save_weights": True
+    }
+```
+#### Conduct a study mode
+The variables used when conduct a study are found under the "objective" function in the "paramstudy.py" file.
+It utilizes a Optuna.trial.trial object that, for each study, will suggest parameters out of the value range manually defined in the cfg object.
+There are different "suggest" methods with different values distributions. Documentation is found here: https://optuna.readthedocs.io/en/stable/reference/generated/optuna.trial.Trial.html
+Documentation 
+```
+paramstudy.py
+...
+def objective(trial):
+    
+    cfg = {
+        "type": "CapsNet", #CapsNet or ConvPool
+        "image_size": trial.suggest_categorical('image_size', [(224, 224), (180, 180), (150, 150),(300, 300)]),
+        "learning_rate": trial.suggest_loguniform('lr', low=1e-3, high=1e-2),
+        "mini_batch_size": 32, #Amount of images per batch
+        "test_batch_size": 20,  #Images per category to test on
+        "step_size": 10, #Amount of steps per Epoch
+        "epochs": trial.suggest_int('epochs', low=30, high=60, step=5),
+        "dropout": True,
+        "dropout_rate":trial.suggest_discrete_uniform('droput_rate', low=0.1, high=0.5, q=0.1),
+        "prnt": False,
+        "optimizer": optim.Adam, #trial.suggest_categorical('optimizer', [optim.Adam, optim.SGD]),
+        "criterion": nn.MSELoss(),
+        "save_weights": False
+    }
+    ...
+ ```
+ 
 ## Folder structure
 ```
 Root
@@ -72,3 +147,5 @@ Root
       |
       |__csv
 ```
+## Further Work
+This project is presented in a dedicated paper that would be the goal for this course and it will be considered finished upon delivery of such paper. Nevertheless the design and functionality of this program can be improved and extended. Faster training time can be reached by redesining the way the program manages the pictures and tensors. Better file structure, variable separation and user interface are also point where improvement is possible.
