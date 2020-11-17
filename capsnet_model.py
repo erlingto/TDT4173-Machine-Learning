@@ -14,7 +14,7 @@ link: https://github.com/jindongwang/Pytorch-CapsuleNet
 """ 
 
 USE_CUDA = True if torch.cuda.is_available() else False
-USE_CUDA = True
+#USE_CUDA = True
 
 
 class ConvLayer(nn.Module):

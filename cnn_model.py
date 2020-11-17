@@ -7,7 +7,8 @@ from torch.utils.data import Dataset, DataLoader
 import torch.optim as optim
 import random
 
-USE_CUDA = False
+USE_CUDA = True if torch.cuda.is_available() else False
+#USE_CUDA = False
 
 def calculate_conv_output(W, K, P, S):
     return int((W-K+2*P)/S)+1
