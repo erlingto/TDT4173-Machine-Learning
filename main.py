@@ -21,14 +21,19 @@ if __name__ == '__main__':
         paramstudy.conduct_study(args.n_trials, args.type)
         exit()
 
-    cfg = variables.convpool_cfg
+    if (args.type == "capsnet"):
+            cfg = variables.capsnet_cfg
+    elif (args.type == "convpool"):
+        cfg = variables.convpool_cfg
     TClassifier = classifier.Classifier(cfg)
-    TClassifier.load_images()
     if args.load_weights:
         TClassifier.load_weights('classifier')
     if args.train:
+        if args.load_weights:
+            TClassifier.load_weights('classifier')
+        TClassifier.load_images()
         TClassifier.train(cfg["epochs"],
-                      cfg["step_size"], cfg["test_batch_size"])
+                        cfg["step_size"], cfg["test_batch_size"])
         if args.plot:
             TClassifier.plot_loss()
 

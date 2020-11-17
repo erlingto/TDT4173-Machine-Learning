@@ -14,10 +14,11 @@ link: https://github.com/jindongwang/Pytorch-CapsuleNet
 """ 
 
 USE_CUDA = True if torch.cuda.is_available() else False
+USE_CUDA = True
 
 
 class ConvLayer(nn.Module):
-    def __init__(self, in_channels=3, out_channels=256, kernel_size=9):
+    def __init__(self, in_channels=3, out_channels=42, kernel_size=9):
         super(ConvLayer, self).__init__()
 
         self.conv = nn.Conv2d(in_channels=in_channels,
@@ -25,13 +26,12 @@ class ConvLayer(nn.Module):
                               kernel_size=kernel_size,
                               stride=1
                               )
-
     def forward(self, x):
         return F.relu(self.conv(x))
 
 
 class PrimaryCaps(nn.Module):
-    def __init__(self, num_capsules=8, in_channels=256, out_channels=32, kernel_size=9, num_routes=32 * 42 * 42):
+    def __init__(self, num_capsules=8, in_channels=42, out_channels=32, kernel_size=9, num_routes=32 * 42 * 42):
         super(PrimaryCaps, self).__init__()
         self.num_routes = num_routes
         self.capsules = nn.ModuleList([
@@ -41,7 +41,7 @@ class PrimaryCaps(nn.Module):
     def forward(self, x):
         u = [capsule(x) for capsule in self.capsules]
         u = torch.stack(u, dim=1)
-        print(u.size())
+        #print(u.size())
         u = u.view(x.size(0), self.num_routes, -1)
         return self.squash(u)
 
@@ -61,6 +61,7 @@ class DigitCaps(nn.Module):
 
         self.W = nn.Parameter(torch.randn(1, num_routes, num_capsules, out_channels, in_channels))
 
+
     def forward(self, x):
         batch_size = x.size(0)
         x = torch.stack([x] * self.num_capsules, dim=2).unsqueeze(4)
@@ -71,6 +72,7 @@ class DigitCaps(nn.Module):
         b_ij = Variable(torch.zeros(1, self.num_routes, self.num_capsules, 1))
         if USE_CUDA:
             b_ij = b_ij.cuda()
+
 
         num_iterations = 3
         for iteration in range(num_iterations):
@@ -106,6 +108,8 @@ class Decoder(nn.Module):
             nn.Linear(1024, self.input_height * self.input_height * self.input_channel),
             nn.Sigmoid()
         )
+            
+
 
     def forward(self, x, data):
         classes = torch.sqrt((x ** 2).sum(2))

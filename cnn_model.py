@@ -7,6 +7,7 @@ from torch.utils.data import Dataset, DataLoader
 import torch.optim as optim
 import random
 
+USE_CUDA = False
 
 def calculate_conv_output(W, K, P, S):
     return int((W-K+2*P)/S)+1
@@ -67,7 +68,7 @@ class ClassifierNet(nn.Module):
             nn.Linear(1024, 5),
             nn.Softmax(dim=1)
             )
-        if torch.cuda.is_available():
+        if USE_CUDA: # torch.cuda.is_available():
             self.cuda()
         else:
             print("NO CUDA to activate")
