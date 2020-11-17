@@ -16,7 +16,6 @@ link: https://github.com/jindongwang/Pytorch-CapsuleNet
 USE_CUDA = True if torch.cuda.is_available() else False
 
 
-
 class ConvLayer(nn.Module):
     def __init__(self, in_channels=3, out_channels=256, kernel_size=9):
         super(ConvLayer, self).__init__()
@@ -41,6 +40,7 @@ class PrimaryCaps(nn.Module):
     def forward(self, x):
         u = [capsule(x) for capsule in self.capsules]
         u = torch.stack(u, dim=1)
+        #print(u.size())
         u = u.view(x.size(0), self.num_routes, -1)
         return self.squash(u)
 

@@ -20,20 +20,20 @@ import variables
 def objective(trial):
     
     cfg = {
-        "type": "ConvPool", #CapsNet or ConvPool
-        "image_size": trial.suggest_categorical('image_size', [(224, 224), (180, 180), (150, 150),
-                                                         (300, 300)]),
+        "type": "CapsNet", #CapsNet or ConvPool
+        "image_size": (100,100),#trial.suggest_categorical('image_size', [(224, 224), (180, 180), (150, 150),
+                      #                                   (300, 300)]),
         # 0.000134,
-        "learning_rate": trial.suggest_loguniform('lr', low=1e-6, high=1e-4),
+        "learning_rate": trial.suggest_loguniform('lr', low=1e-3, high=1e-2),
         "mini_batch_size": 32,
         "test_batch_size": 20,
-        "step_size": 5,
-        "epochs": 2,#trial.suggest_int('epochs', low=50, high=60, step=5),
+        "step_size": 10,
+        "epochs": 10,#trial.suggest_int('epochs', low=50, high=60, step=5),
         # trial.suggest_categorical('dropout', [True, False]),
         "dropout": True,
-        "dropout_rate": trial.suggest_discrete_uniform('droput_rate', low=0.1, high=0.5, q=0.1),
+        "dropout_rate": 0.4,#trial.suggest_discrete_uniform('droput_rate', low=0.1, high=0.5, q=0.1),
         "prnt": False,
-        "optimizer": trial.suggest_categorical('optimizer', [optim.Adam, optim.SGD]),
+        "optimizer": optim.Adam, #trial.suggest_categorical('optimizer', [optim.Adam, optim.SGD]),
         "criterion": nn.MSELoss(),
         "save_weights": False
         

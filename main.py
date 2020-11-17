@@ -19,13 +19,16 @@ if __name__ == '__main__':
     if args.study:
         # To conduct a study with n number of trials as parameter and the type of the model
         paramstudy.conduct_study(args.n_trials, args.type)
+        exit()
 
-    elif args.train:
-        if (args.type == "capsnet"):
+    if (args.type == "capsnet"):
             cfg = variables.capsnet_cfg
-        elif (args.type == "convpool"):
-            cfg = variables.convpool_cfg
-        TClassifier = classifier.Classifier(cfg)
+    elif (args.type == "convpool"):
+        cfg = variables.convpool_cfg
+    TClassifier = classifier.Classifier(cfg)
+    if args.load_weights:
+        TClassifier.load_weights('classifier')
+    if args.train:
         if args.load_weights:
             TClassifier.load_weights('classifier')
         TClassifier.load_images()

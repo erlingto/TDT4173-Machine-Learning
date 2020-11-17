@@ -1,0 +1,6 @@
+matplotlib
+imutils
+opencv-python
+optuna
+joblib
+numpy==1.19.3

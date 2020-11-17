@@ -67,7 +67,7 @@ class ClassifierNet(nn.Module):
             nn.Linear(1024, 5),
             nn.Softmax(dim=1)
             )
-        if torch.cuda.is_available():
+        if USE_CUDA: # torch.cuda.is_available():
             self.cuda()
         else:
             print("NO CUDA to activate")

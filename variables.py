@@ -35,7 +35,7 @@ std=[0.2510, 0.2236, 0.2287]
 
 ## Model Configuration 
 
-
+### Settings for tweaking training and testing with Convolutional network
 convpool_cfg =  {
         "type": "ConvPool", #CapsNet or ConvPool
         "image_size": (100, 100), # (X, Y)                                         
@@ -52,6 +52,8 @@ convpool_cfg =  {
         "criterion": nn.MSELoss(),
         "save_weights": True
     }
+
+### Settings for tweaking training and testing with Capsule neural network
 capsnet_cfg = {
         "type": "CapsNet", #CapsNet or ConvPool
         "image_size": (100, 100), # (X, Y)                                         

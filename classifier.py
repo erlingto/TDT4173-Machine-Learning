@@ -10,7 +10,7 @@ import torch.optim as optim
 from imutils import paths
 import cv2
 from PIL import Image
-import glob
+#import glob
 import random
 import optuna
 import joblib
@@ -21,7 +21,6 @@ import cnn_model
 import capsnet_model
 
 USE_CUDA = True if torch.cuda.is_available() else False
-
 
 def standardize_image(image): 
         image = transforms.ToTensor()(image) 
@@ -112,6 +111,7 @@ class Classifier:
         self.acc_list = []
         self.test_acc_list = []
 
+    # Plot functions
     def plot_accuracy(self):
         indexes = [i+1 for i in range(len(self.acc_list))]
         plt.plot(indexes, self.acc_list)
