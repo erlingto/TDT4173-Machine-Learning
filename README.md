@@ -5,9 +5,11 @@ This is the main project of the NTNU course TDT4137 - Machine Learning.
 The purpose of this project is to compare classic Convolutional Neural Network (CNN) to the new Capsule neural network (Capsnet) on the same dataset.
 We developed a program with our implementation of CNN based and an adaptation of a Capsnet implementation, both based on the Pythorch framework.
 The original Capsnet implementation (All rights to jindongwang) can be found here: https://github.com/jindongwang/Pytorch-CapsuleNet
+Modules for Image Augmentation and Standardization of the dataset are also implemented in this project.
 
 The runtime of this project is configurable by choosing witch classifier utilize (CNN or Capsnet) and a mode between "train and evaluate" or "conduct a study".
 Both the implementations supports the use of a CUDA enabled graphic card for speeding up calculations on both modes.
+
 
 ### Train and Evaluate
 In this mode, the program will train the selected model on the whished parameters. The program gives the possibility to save and load trained classifier weights. There are options for plotting statistics about the training prosess like the loss plot per epoch. 
