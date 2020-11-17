@@ -27,7 +27,7 @@ Dataset is composed of 4242 pictures of flowers divided in 5 categories: Sunflow
 Source of the dataset : https://www.kaggle.com/rishitchs/final-flowers-course-project-dataset
 
 ## Installation Guide
-
+The project is developed used Python version 3.7, but newer version should be compatible too. Compatibility with Python 2.7 is not assured.
 ### CUDA Toolkit installation
 CUDA Toolkit is necessary if you want to utilize your NVIDIA GPU for tensors operations.
 Check if you have a compatibel GPU here: https://developer.nvidia.com/cuda-gpus
