@@ -21,7 +21,7 @@ import cnn_model
 import capsnet_model
 
 USE_CUDA = True if torch.cuda.is_available() else False
-USE_CUDA = False
+
 
 def standardize_image(image): 
         image = transforms.ToTensor()(image) 
@@ -222,7 +222,6 @@ class Classifier:
             # load the image, pre-process it, and store it in the data list
             im = Image.open(imagePath)
             im.thumbnail(self.image_size, Image.ANTIALIAS)
-            im = image_augmentation(im)
             im = np.array(im)
             # TODO resize without converting to numpy array?
             im = cv2.resize(im, self.image_size)
@@ -275,7 +274,7 @@ class Classifier:
                         label = label.cuda().to(self.device)
                     # TODO change to tensor in load_images
                     loss = self.model.loss(im, output, label, reconstructions)
-                    self.loss_list.append(loss.item())
+                    epoch_loss += loss.item()
 
                     # Backprop and perform optimisation
                     self.optimizer.zero_grad()
@@ -285,7 +284,7 @@ class Classifier:
                     # Track the accuracy
                     if torch.argmax(masked.data) == torch.argmax(label):
                         correct += 1
-                    self.acc_list.append(correct / self.batch_size)
+                    epoch_acc += (correct / self.batch_size)
 
                 if (i + 1) % self.batch_size == 0:
                     print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
@@ -300,6 +299,8 @@ class Classifier:
             #Turn on model evaluation mode
             self.model.eval()
             #Evaluate on test set
+            self.loss_list.append(epoch_loss)
+            self.acc_list.append(epoch_acc / number_of_batches)
             accuracy = evaluation(self, 50, False)
             self.test_acc_list.append(accuracy)
             #Turn model training mode back on
@@ -311,7 +312,7 @@ class Classifier:
                     raise optuna.exceptions.TrialPruned()
             self.reset_epoch()
         if(self.save):
-            self.save_weights(variables.saved_weights_path + "/CapsNet")
+            self.save_weights(variables.saved_weights_path + "/CapsNet1(lr-2)")
 
     def train_ConvPool(self, trial, number_of_epochs, number_of_batches, test_batch_size):
         
@@ -352,10 +353,14 @@ class Classifier:
 
             # Evaluate accuracy of model after this epoch
             # TODO: implement limit of testing size
+            self.model.eval()
+            #Evaluate on test set
             self.loss_list.append(epoch_loss)
             self.acc_list.append(epoch_acc / number_of_batches)
-            accuracy = evaluation(self, test_batch_size, False)
+            accuracy = evaluation(self, 50, False)
             self.test_acc_list.append(accuracy)
+            #Turn model training mode back on
+            self.model.train()
             # report accuracy of model now and evaluate if the current trial should prune
             if trial:
                 trial.report(accuracy, epoch)

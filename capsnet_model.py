@@ -14,24 +14,24 @@ link: https://github.com/jindongwang/Pytorch-CapsuleNet
 """ 
 
 USE_CUDA = True if torch.cuda.is_available() else False
-USE_CUDA = False
+
 
 
 class ConvLayer(nn.Module):
-    def __init__(self, in_channels=3, out_channels=42, kernel_size=9):
+    def __init__(self, in_channels=3, out_channels=256, kernel_size=9):
         super(ConvLayer, self).__init__()
 
         self.conv = nn.Conv2d(in_channels=in_channels,
                               out_channels=out_channels,
                               kernel_size=kernel_size,
-                              stride=1
+                              stride=3
                               )
     def forward(self, x):
         return F.relu(self.conv(x))
 
 
 class PrimaryCaps(nn.Module):
-    def __init__(self, num_capsules=8, in_channels=42, out_channels=32, kernel_size=9, num_routes=32 * 42 * 42):
+    def __init__(self, num_capsules=8, in_channels=256, out_channels=32, kernel_size=9, num_routes=32 * 12 * 12):
         super(PrimaryCaps, self).__init__()
         self.num_routes = num_routes
         self.capsules = nn.ModuleList([
@@ -41,7 +41,6 @@ class PrimaryCaps(nn.Module):
     def forward(self, x):
         u = [capsule(x) for capsule in self.capsules]
         u = torch.stack(u, dim=1)
-        print(u.size())
         u = u.view(x.size(0), self.num_routes, -1)
         return self.squash(u)
 
@@ -52,7 +51,7 @@ class PrimaryCaps(nn.Module):
 
 
 class DigitCaps(nn.Module):
-    def __init__(self, num_capsules=5, num_routes=32 * 42 * 42, in_channels=8, out_channels=16):
+    def __init__(self, num_capsules=5, num_routes=32 * 12 * 12, in_channels=8, out_channels=16):
         super(DigitCaps, self).__init__()
 
         self.in_channels = in_channels
@@ -65,7 +64,6 @@ class DigitCaps(nn.Module):
     def forward(self, x):
         batch_size = x.size(0)
         x = torch.stack([x] * self.num_capsules, dim=2).unsqueeze(4)
-        
         W = torch.cat([self.W] * batch_size, dim=0)
         u_hat = torch.matmul(W, x)
 

@@ -30,12 +30,12 @@ if __name__ == '__main__':
             TClassifier.load_weights('classifier')
         TClassifier.load_images()
     
-        TClassifier.train(cfg["epochs"],
-                      cfg["step_size"], cfg["test_batch_size"])
-        if args.plot:
-            TClassifier.plot_loss()
+        #TClassifier.train(cfg["epochs"],
+         #             cfg["step_size"], cfg["test_batch_size"])
+        #if args.plot:
+           # TClassifier.plot_loss()
 
         #To remove
         EvClassifier = classifier.Classifier(cfg)
-        EvClassifier.copy_weights(TClassifier)
+        EvClassifier.load_weights("Models/CapsNet1(lr-2)")
         accuracy = classifier.evaluation(EvClassifier, cfg["test_batch_size"], cfg["prnt"])
