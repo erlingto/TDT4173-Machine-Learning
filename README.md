@@ -49,18 +49,18 @@ If you use a Python version older then  3.2, run this program for installing ult
 
 ## User Guide
 Run "main.py" for starting the program. The "main.py" script accepts the following parameters:
-* **--type** (""convpool" or "capsnet") Which model to run. Default is "convpool".
-* **--train** (True or false) Wether to train or not under the "Train and Evaluate" mode. Default is True.
-* **--load_weights** (True or false) Wether to load the previuosly saved weights or not when in "Train and Evaluate" mode. Default is False.
+* **--model** (""convpool" or "capsnet") Which model to run. Default is "convpool".
+* **--train** (True or false) Wether to train or not under the "Train and Evaluate" mode. Default is False.
+* **--load_weights** (True or false) Load saved weights when in "Train and Evaluate" mode. Takes the filename as parameter. Default is None.
 * **--plot** (True or false) Wether to plot graphs after training process or not. Default is True.
 * **--study** (True or False) Wether to run in "Conduct a study" mode or not. This will overwrite the --train parameter. Default is False.
 * **--n_trials** (Int value) Number of trials when in "Conduct a study" mode. Default is 10.
 
 ### Some examples of use:
 
-* "**python main.py**". This will run the program in "Train and Evaluate" mode on the "convpool" model without either skipping training nor loading weights. 
-* "**python main.py --type=convpool --train=False --load_weights=True**". The program will load the weigts of a previously trained "capsnet" model and will evaluate on it without training it first.
-* "**python main.py --study=True --n_trials=100**". With this command, the program will then conduct a study with 100 trials on a convpool model.
+* "**python main.py --train True**". This will run the program in "Train and Evaluate" mode on the "convpool" model without either skipping training nor loading weights. 
+* "**python main.py --model convpool --load_weights GDRHSD_capsnett_accuracy_0.49.weights **". The program will load the weigts of a previously trained "capsnet" model and will evaluate on it without training it first.
+* "**python main.py --study True --n_trials 100**". With this command, the program will then conduct a study with 100 trials on a convpool model.
 
 ### Variables
 #### Train and Evaluate mode
@@ -142,6 +142,10 @@ Root
 |      |__train
 |
 |__Models
+|
+|
+|__Source
+|
 |
 |__Results
    |
