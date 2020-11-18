@@ -32,9 +32,9 @@ if __name__ == '__main__':
         if args.load_weights:
             TClassifier.load_weights('classifier')
         TClassifier.load_images()
-    
-        TClassifier.train(cfg["epochs"],
-                      cfg["step_size"], cfg["test_batch_size"])
+
+        TClassifier.load_weights('Models/CapsNet2')
+        classifier.evaluation(TClassifier, 150, True)
         if args.plot:
             TClassifier.plot_loss()
             TClassifier.plot_accuracy()

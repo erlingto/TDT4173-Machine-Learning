@@ -261,7 +261,7 @@ class Classifier:
     def train_capsNet(self, trial,  number_of_epochs, number_of_batches, test_batch_size):  
         for epoch in range(number_of_epochs):
             epoch_loss = 0
-            epoch_acc = 0 
+            epoch_acc = 0   
             for step in range(number_of_batches):
                 correct = 0
                 for i in range(self.batch_size):
