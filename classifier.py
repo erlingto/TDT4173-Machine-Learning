@@ -258,9 +258,10 @@ class Classifier:
         elif self.type == "ConvPool":
             self.train_ConvPool(trial, number_of_epochs, number_of_batches, test_batch_size)
 
-    def train_capsNet(self, trial,  number_of_epochs, number_of_batches, test_batch_size):
-
+    def train_capsNet(self, trial,  number_of_epochs, number_of_batches, test_batch_size):  
         for epoch in range(number_of_epochs):
+            epoch_loss = 0
+            epoch_acc = 0 
             for step in range(number_of_batches):
                 correct = 0
                 for i in range(self.batch_size):
@@ -312,7 +313,7 @@ class Classifier:
                     raise optuna.exceptions.TrialPruned()
             self.reset_epoch()
         if(self.save):
-            self.save_weights(variables.saved_weights_path + "/CapsNet1(lr-2)")
+            self.save_weights(variables.saved_weights_path + "/CapsNet2")
 
     def train_ConvPool(self, trial, number_of_epochs, number_of_batches, test_batch_size):
         
@@ -415,7 +416,8 @@ def evaluation(Classifier, test_batch_size, prnt):
     errors = np.zeros(5)
     for i in range(test_batch_size*5):
         if Classifier.type == "CapsNet":
-            _, _, output = Classifier.model(batch_images[str(i)])
+            with torch.no_grad():
+                _, _, output = Classifier.model(batch_images[str(i)])
             predicted = torch.argmax(output)
         elif Classifier.type == "ConvPool":
             output = Classifier.model(batch_images[str(i)]).detach()
