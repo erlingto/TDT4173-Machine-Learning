@@ -299,16 +299,16 @@ class Classifier:
                     self.optimizer.step()
 
                     # Track the accuracy
-                    if torch.argmax(masked.data) == torch.argmax(label):
-                        correct += 1
-                    epoch_acc += (correct / self.batch_size)
+                if torch.argmax(masked.data) == torch.argmax(label):
+                    correct += 1
+            epoch_acc += (correct / self.batch_size)
 
-                if (i + 1) % self.batch_size == 0:
-                    print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
-                          .format(epoch + 1, number_of_epochs, step + 1, number_of_batches, loss.item(),
-                                  (correct / self.batch_size) * 100))
-                self.reset_batches()
-                self.load_images()
+            
+            print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
+                    .format(epoch + 1, number_of_epochs, step + 1, number_of_batches, loss.item(),
+                            (correct / self.batch_size) * 100))
+            self.reset_batches()
+            self.load_images()
 
             # Evaluate accuracy of model after this epoch
             # TODO: implement limit of testing size
@@ -361,12 +361,12 @@ class Classifier:
                     predicted = torch.round(output.data[0])
                     if torch.argmax(predicted) == torch.argmax(label):
                         correct += 1
-                    epoch_acc += (correct / self.batch_size)
+                epoch_acc += (correct / self.batch_size)
 
-                if (i + 1) % self.batch_size == 0:  
-                    print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
-                          .format(epoch + 1, number_of_epochs, step + 1, number_of_batches, loss.item(),
-                                  (correct / self.batch_size) * 100))
+            
+                print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
+                    .format(epoch + 1, number_of_epochs, step + 1, number_of_batches, loss.item(),
+                            (correct / self.batch_size) * 100))
                 self.reset_batches()
                 self.load_images()
 
