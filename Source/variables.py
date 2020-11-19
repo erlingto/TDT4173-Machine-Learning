@@ -47,7 +47,7 @@ convpool_cfg =  {
         # trial.suggest_categorical('dropout', [True, False]),
         "dropout": True,
         "dropout_rate": 0.4,
-        "prnt": True,
+        "prnt": False,
         "optimizer": optim.Adam,
         "criterion": nn.MSELoss(),
         "save_weights": True
@@ -60,12 +60,12 @@ capsnet_cfg = {
         "learning_rate": 6.34192248576476e-04,
         "mini_batch_size": 32, #Amount of images per batch
         "test_batch_size": 150, #Images per category to test on
-        "step_size": 32, #Amount of batches per Epoch
-        "epochs": 50,
+        "step_size": 1, #Amount of batches per Epoch
+        "epochs": 1,
         # trial.suggest_categorical('dropout', [True, False]),
         "dropout": True,
         "dropout_rate": 0.4,
-        "prnt": True,
+        "prnt": False,
         "optimizer": optim.Adam,
         "criterion": nn.MSELoss(),
         "save_weights": True

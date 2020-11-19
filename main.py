@@ -35,9 +35,7 @@ if __name__ == '__main__':
         print("Weights loaded.")
     if args.train:
         TClassifier.load_images()
-
-        TClassifier.load_weights('Models/CapsNet2')
-        classifier.evaluation(TClassifier, 150, True)
+        TClassifier.train(cfg["epochs"], cfg["mini_batch_size"], cfg["test_batch_size"])
         if args.plot:
             TClassifier.plot_loss()
             TClassifier.plot_accuracy()
