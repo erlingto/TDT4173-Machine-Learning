@@ -15,6 +15,7 @@ import random
 import optuna
 import joblib
 import pathlib
+import string
 import variables
 #models
 import cnn_model
@@ -70,7 +71,7 @@ class Classifier:
         criterion = cfg["criterion"]
         dropout_rate = cfg["dropout_rate"]
         save_weights = cfg['save_weights']
-        model_type = cfg['type'] #CapsNet or ConvPool
+        model_type = cfg['type'] #capsnet or convpool
 
 
         if USE_CUDA:
@@ -92,9 +93,9 @@ class Classifier:
 
         # Model type 
         self.type = model_type
-        if self.type == "CapsNet":
+        if self.type == "capsnet":
             self.model = capsnet_model.CapsNet()
-        elif self.type == "ConvPool":
+        elif self.type == "convpool":
             self.model = cnn_model.ClassifierNet(self.image_size[0], self.image_size[1], dropout, dropout_rate)
 
         #optimizer
@@ -207,7 +208,12 @@ class Classifier:
     def copy_weights(self, TrainNet):
         self.model.load_state_dict(TrainNet.model.state_dict())
 
-    def save_weights(self, path):
+    def random_string_generator(self, length):
+        return ''.join(random.choices(string.ascii_uppercase + string.digits, k = length))
+
+        
+    def save_weights(self, accuracy):
+        path = variables.saved_weights_path + self.random_string_generator(6) + "_"  + self.type + "_accuracy_" + str(accuracy) + ".weights"
         torch.save(self.model.state_dict(), path)
 
     def predict(self, image):
@@ -253,12 +259,14 @@ class Classifier:
 
 
     def train(self,  number_of_epochs, number_of_batches, test_batch_size, trial = None):
-        if self.type == "CapsNet":
+        if self.type == "capsnet":
             self.train_capsNet(trial, number_of_epochs, number_of_batches, test_batch_size)
-        elif self.type == "ConvPool":
+        elif self.type == "convpool":
             self.train_ConvPool(trial, number_of_epochs, number_of_batches, test_batch_size)
 
-    def train_capsNet(self, trial,  number_of_epochs, number_of_batches, test_batch_size):  
+    def train_capsNet(self, trial,  number_of_epochs, number_of_batches, test_batch_size):
+        print("Starting training on capsnet.")
+        last_accuracy = 0
         for epoch in range(number_of_epochs):
             epoch_loss = 0
             epoch_acc = 0   
@@ -306,6 +314,7 @@ class Classifier:
             self.test_acc_list.append(accuracy)
             #Turn model training mode back on
             self.model.train()
+            last_accuracy = accuracy
             # report accuracy of model now and evaluate if the current trial should prune
             if trial:
                 trial.report(accuracy, epoch)
@@ -313,10 +322,11 @@ class Classifier:
                     raise optuna.exceptions.TrialPruned()
             self.reset_epoch()
         if(self.save):
-            self.save_weights(variables.saved_weights_path + "/CapsNet2")
+            self.save_weights(last_accuracy)
 
     def train_ConvPool(self, trial, number_of_epochs, number_of_batches, test_batch_size):
-        
+        print("Starting training on convpool.")
+        last_accuracy = 0
         for epoch in range(number_of_epochs):
             epoch_loss = 0
             epoch_acc = 0
@@ -359,6 +369,7 @@ class Classifier:
             self.loss_list.append(epoch_loss)
             self.acc_list.append(epoch_acc / number_of_batches)
             accuracy = evaluation(self, 50, False)
+            last_accuracy = accuracy
             self.test_acc_list.append(accuracy)
             #Turn model training mode back on
             self.model.train()
@@ -369,7 +380,7 @@ class Classifier:
                     raise optuna.exceptions.TrialPruned()
             self.reset_epoch()
         if(self.save):
-            self.save_weights(variables.saved_weights_path + "/ConvPool")
+            self.save_weights(last_accuracy)
 
 
 def evaluation(Classifier, test_batch_size, prnt):
@@ -415,11 +426,11 @@ def evaluation(Classifier, test_batch_size, prnt):
 
     errors = np.zeros(5)
     for i in range(test_batch_size*5):
-        if Classifier.type == "CapsNet":
+        if Classifier.type == "capsnet":
             with torch.no_grad():
                 _, _, output = Classifier.model(batch_images[str(i)])
             predicted = torch.argmax(output)
-        elif Classifier.type == "ConvPool":
+        elif Classifier.type == "convpool":
             output = Classifier.model(batch_images[str(i)]).detach()
             predicted = torch.argmax(output)
         label = batch_labels[str(i)]
