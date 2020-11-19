@@ -19,7 +19,7 @@ train_set_paths_by_category = {"tulip": glob.glob(train_set_path + "/tulip/*"),
                          "dandelion": glob.glob(train_set_path + "/dandelion/*"),
                          "daisy": glob.glob(train_set_path + "/daisy/*")}
 
-test_set_path_by_category = {"tulip": glob.glob(test_set_path + "/tulip/*"),
+test_set_paths_by_category = {"tulip": glob.glob(test_set_path + "/tulip/*"),
                              "sunflower":  glob.glob(test_set_path + "/sunflower/*"),
                              "rose":  glob.glob(test_set_path + "/rose/*"),
                              "dandelion":  glob.glob(test_set_path + "/dandelion/*"),

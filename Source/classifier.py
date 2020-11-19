@@ -389,7 +389,7 @@ class Classifier:
 
 
 def evaluation(Classifier, test_batch_size, prnt):
-    paths = variables.train_set_paths_by_category        
+    paths = variables.test_set_paths_by_category        
     groups = list(paths.keys())
     counter = 0
     batch_images = {}
