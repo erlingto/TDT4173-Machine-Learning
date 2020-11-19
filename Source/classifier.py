@@ -228,6 +228,8 @@ class Classifier:
             # load the image, pre-process it, and store it in the data list
             im = Image.open(imagePath)
             im.thumbnail(self.image_size, Image.ANTIALIAS)
+            if self.type=="convpool":
+                im = image_augmentation(im) 
             im = np.array(im)
             # TODO resize without converting to numpy array?
             im = cv2.resize(im, self.image_size)

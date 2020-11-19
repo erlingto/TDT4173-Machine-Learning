@@ -38,7 +38,7 @@ std=[0.2510, 0.2236, 0.2287]
 ### Settings for tweaking training and testing with Convolutional network
 convpool_cfg =  {
         "type": "convpool", #capsnet or convpool
-        "image_size": (100, 100), # (X, Y)                                         
+        "image_size": (224, 224), # (X, Y)                                         
         "learning_rate": 6.34192248576476e-05,
         "mini_batch_size": 32, #Amount of images per batch
         "test_batch_size": 20, #Images per category to test on
