@@ -305,7 +305,7 @@ class Classifier:
 
             
             print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
-                    .format(epoch + 1, number_of_epochs, step + 1, number_of_batches, loss.item(),
+                    .format(epoch + 1, number_of_epochs, step + 1, number_of_batches, epoch_loss,
                             (correct / self.batch_size) * 100))
             self.reset_batches()
             self.load_images()

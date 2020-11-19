@@ -45,7 +45,7 @@ convpool_cfg =  {
         "mini_batch_size": 32, #Amount of images per batch
         "test_batch_size": 150, #Images per category to test on
         "step_size": 32, #Amount of batches per Epoch
-        "epochs": 20,
+        "epochs": 200,
         # trial.suggest_categorical('dropout', [True, False]),
         "dropout": True,
         "dropout_rate": 0.4,
