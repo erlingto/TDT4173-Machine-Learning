@@ -27,6 +27,8 @@ test_set_path_by_category = {"tulip": glob.glob(test_set_path + "/tulip/*"),
 
 saved_weights_path = "Models/"
 
+plots_path = "Results/Plots/"
+
 ##Normalization
 
 mean=[0.4557, 0.4188, 0.2996]
@@ -43,7 +45,7 @@ convpool_cfg =  {
         "mini_batch_size": 32, #Amount of images per batch
         "test_batch_size": 20, #Images per category to test on
         "step_size": 32, #Amount of batches per Epoch
-        "epochs": 200,
+        "epochs": 2,
         # trial.suggest_categorical('dropout', [True, False]),
         "dropout": True,
         "dropout_rate": 0.4,

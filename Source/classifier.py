@@ -118,14 +118,16 @@ class Classifier:
         plt.plot(indexes, self.acc_list)
         plt.ylabel('Training Accuracy')
         plt.xlabel('Epoch')
-        plt.show()
+        #plt.show()
+        plt.savefig(variables.plots_path + self.type + "/accuracy.png")
 
     def plot_loss(self):
         indexes = [i+1 for i in range(len(self.loss_list))]
         plt.plot(indexes, self.loss_list)
         plt.ylabel('Loss')
         plt.xlabel('Epoch')
-        plt.show()
+        #plt.show()
+        plt.savefig(variables.plots_path + self.type + "/loss.png")
 
     def plot_test_accuracy(self):
         indexes = [i+1 for i in range(len(self.test_acc_list))]
@@ -133,7 +135,8 @@ class Classifier:
         plt.plot(indexes, self.test_acc_list)
         plt.ylabel('Test Accuracy')
         plt.xlabel('Epoch')
-        plt.show()
+        #plt.show()
+        plt.savefig(variables.plots_path + self.type + "/test_accuracy.png")
 
     def reset_batches(self):
         self.batch_images = {}
