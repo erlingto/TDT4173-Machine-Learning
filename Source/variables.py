@@ -27,6 +27,8 @@ test_set_path_by_category = {"tulip": glob.glob(test_set_path + "/tulip/*"),
 
 saved_weights_path = "Models/"
 
+plots_path = "Results/Plots/"
+
 ##Normalization
 
 mean=[0.4557, 0.4188, 0.2996]
