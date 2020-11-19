@@ -120,6 +120,7 @@ class Classifier:
         plt.xlabel('Epoch')
         #plt.show()
         plt.savefig(variables.plots_path + self.type + "/accuracy.png")
+        plt.clf()
 
     def plot_loss(self):
         indexes = [i+1 for i in range(len(self.loss_list))]
@@ -128,6 +129,7 @@ class Classifier:
         plt.xlabel('Epoch')
         #plt.show()
         plt.savefig(variables.plots_path + self.type + "/loss.png")
+        plt.clf()
 
     def plot_test_accuracy(self):
         indexes = [i+1 for i in range(len(self.test_acc_list))]
@@ -137,7 +139,8 @@ class Classifier:
         plt.xlabel('Epoch')
         #plt.show()
         plt.savefig(variables.plots_path + self.type + "/test_accuracy.png")
-
+        plt.clf()
+        
     def reset_batches(self):
         self.batch_images = {}
         self.batch_labels = {}
