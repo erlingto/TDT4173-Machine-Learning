@@ -49,7 +49,7 @@ convpool_cfg =  {
         # trial.suggest_categorical('dropout', [True, False]),
         "dropout": True,
         "dropout_rate": 0.4,
-        "prnt": True,
+        "prnt": False,
         "optimizer": optim.Adam,
         "criterion": nn.MSELoss(),
         "save_weights": True
