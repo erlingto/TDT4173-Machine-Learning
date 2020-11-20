@@ -40,7 +40,7 @@ class PrimaryCaps(nn.Module):
     def forward(self, x):
         u = [capsule(x) for capsule in self.capsules]
         u = torch.stack(u, dim=1)
-        #print(u.size())
+        print(u.size())
         u = u.view(x.size(0), self.num_routes, -1)
         return self.squash(u)
 
@@ -93,7 +93,7 @@ class DigitCaps(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, input_width=150, input_height=150, input_channel=3):
+    def __init__(self, input_width=224, input_height=224, input_channel=3):
         super(Decoder, self).__init__()
         self.input_width = input_width
         self.input_height = input_height
