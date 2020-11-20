@@ -280,6 +280,7 @@ class Classifier:
             epoch_acc = 0   
             for step in range(number_of_batches):
                 correct = 0
+                step_loss = 0
                 for i in range(self.batch_size):
                     # Run the forward pass
                     im = self.batch_images[str(i)]
@@ -291,7 +292,7 @@ class Classifier:
                         label = label.cuda().to(self.device)
                     # TODO change to tensor in load_images
                     loss = self.model.loss(im, output, label, reconstructions)
-                    epoch_loss += loss.item()
+                    step_loss += loss.item()
 
                     # Backprop and perform optimisation
                     self.optimizer.zero_grad()
@@ -299,16 +300,17 @@ class Classifier:
                     self.optimizer.step()
 
                     # Track the accuracy
-                if torch.argmax(masked.data) == torch.argmax(label):
-                    correct += 1
-            epoch_acc += (correct / self.batch_size)
+                    if torch.argmax(masked.data) == torch.argmax(label):
+                        correct += 1
+                epoch_acc += (correct / self.batch_size)
 
             
-            print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
-                    .format(epoch + 1, number_of_epochs, step + 1, number_of_batches, epoch_loss,
-                            (correct / self.batch_size) * 100))
-            self.reset_batches()
-            self.load_images()
+                print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
+                        .format(epoch + 1, number_of_epochs, step + 1, number_of_batches, step_loss,
+                                (correct / self.batch_size) * 100))
+                epoch_loss += step_loss
+                self.reset_batches()
+                self.load_images()
 
             # Evaluate accuracy of model after this epoch
             # TODO: implement limit of testing size
@@ -340,6 +342,7 @@ class Classifier:
             epoch_acc = 0
             for step in range(number_of_batches):
                 correct = 0
+                step_loss = 0
                 for i in range(self.batch_size):
                     # Run the forward pass
                     im = self.batch_images[str(i)]
@@ -350,7 +353,7 @@ class Classifier:
                         label = label.cuda().to(self.device)
                     # TODO change to tensor in load_images
                     loss = self.criterion(output, label)
-                    epoch_loss += loss.item()
+                    step_loss += loss.item()
 
                     # Backprop and perform Adam optimisation
                     self.optimizer.zero_grad()
@@ -362,7 +365,7 @@ class Classifier:
                     if torch.argmax(predicted) == torch.argmax(label):
                         correct += 1
                 epoch_acc += (correct / self.batch_size)
-
+                epoch_loss += step_loss
             
                 print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.2f}%'
                     .format(epoch + 1, number_of_epochs, step + 1, number_of_batches, epoch_loss,
