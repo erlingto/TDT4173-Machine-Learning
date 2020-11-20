@@ -30,7 +30,7 @@ class ConvLayer(nn.Module):
 
 
 class PrimaryCaps(nn.Module):
-    def __init__(self, num_capsules=8, in_channels=256, out_channels=32, kernel_size=9, num_routes=32 * 12 * 12):
+    def __init__(self, num_capsules=8, in_channels=256, out_channels=32, kernel_size=9, num_routes=32 * 20 * 20):
         super(PrimaryCaps, self).__init__()
         self.num_routes = num_routes
         self.capsules = nn.ModuleList([
@@ -51,7 +51,7 @@ class PrimaryCaps(nn.Module):
 
 
 class DigitCaps(nn.Module):
-    def __init__(self, num_capsules=5, num_routes=32 * 12 * 12, in_channels=8, out_channels=16):
+    def __init__(self, num_capsules=5, num_routes=32 * 20 * 20, in_channels=8, out_channels=16):
         super(DigitCaps, self).__init__()
 
         self.in_channels = in_channels
@@ -93,7 +93,7 @@ class DigitCaps(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, input_width=100, input_height=100, input_channel=3):
+    def __init__(self, input_width=150, input_height=150, input_channel=3):
         super(Decoder, self).__init__()
         self.input_width = input_width
         self.input_height = input_height
