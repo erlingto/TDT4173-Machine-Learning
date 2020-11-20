@@ -58,7 +58,7 @@ convpool_cfg =  {
 ### Settings for tweaking training and testing with Capsule neural network
 capsnet_cfg = {
         "type": "capsnet", #capsnet or convpool
-        "image_size": (150, 150), # (X, Y)                                         
+        "image_size": (2224, 224), # (X, Y)                                         
         "learning_rate": 6.34192248576476e-05,
         "mini_batch_size": 32, #Amount of images per batch
         "test_batch_size": 150, #Images per category to test on
