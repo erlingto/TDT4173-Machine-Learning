@@ -40,5 +40,6 @@ if __name__ == '__main__':
             TClassifier.plot_loss()
             TClassifier.plot_accuracy()
             TClassifier.plot_test_accuracy()
+    TClassifier.view_random_reconstruction()
     TClassifier.model.eval()
-    classifier.evaluation(TClassifier, cfg["test_batch_size"], cfg["prnt"])
+    classifier.evaluation(TClassifier, cfg["test_batch_size"], True)
