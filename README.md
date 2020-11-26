@@ -14,7 +14,7 @@ Both the implementations supports the use of a CUDA enabled graphic card for spe
 A 
 
 If not specified, the program will create or load a "convpool" model. In the user guide is shown how to customize the runtime of the program with parameters.
-Some pre-trained models can be loaded in the program for evaluation purposes. Due to the high size, you can download it [from this link](https://drive.google.com/drive/folders/1EGAMN5IUjCIAX7SfmnecB9kryGvJJiMQ?usp=sharing) and place it in the project root. More instructions follows the download.
+Some pre-trained models can be loaded in the program for evaluation purposes. Due to the high size, you can download it [from this link](https://drive.google.com/drive/folders/1gg7o8Hry2iGaw366ISvkLrzHmiLmEqbw?usp=sharing) and place it in the project root. More instructions follows the download.
 
 ### "Train and Evaluate" mode
 In this mode, the program will train the selected model on the whished parameters. The program gives the possibility to save and load trained classifier weights. There are options for plotting statistics about the training prosess like the loss plot per epoch. 
