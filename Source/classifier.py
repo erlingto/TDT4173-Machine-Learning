@@ -27,6 +27,7 @@ import seaborn as sn
 
 USE_CUDA = True if torch.cuda.is_available() else False
 
+# Standardization Module.
 def standardize_image(image): 
     image = transforms.ToTensor()(image) 
     image = transforms.Normalize(mean=variables.mean, std=variables.std)(image) #calculated mean and standard deviation for whole dataset  
@@ -46,6 +47,8 @@ def destandardize_image(image_size, tensor):
 
     return tmp
 
+# Image Augmentation module, called in the Picture Loader Module. Each picture passes through this module and can 
+    # be altered with one image augmentation technique.
 def image_augmentation(image):
         x = np.random.randint(0,15)
         augImg = image
@@ -164,7 +167,7 @@ class Classifier:
         self.batch_labels = {}
         self.batch_path = {}
 
-    #TODO implement image visualizations
+    #Deprecated in the latest build
     def view_image(self):
         if self.type == "capsnet":
             print("Model is not traditional CNN")
@@ -211,7 +214,7 @@ class Classifier:
         Classifier.tensor_to_image(self, x)
         x = self.model.pool5(x)
         Classifier.tensor_to_image(self, x)
-
+    # Not utilized in this build
     def tensor_to_image(self, tensor):
         if self.cuda:
             tensor = tensor.cpu()
@@ -252,9 +255,9 @@ class Classifier:
             reconstructions = reconstructions.cpu()
         reconstructions = reconstructions.detach().clone().numpy()
         reconstructions = destandardize_image(self.image_size, reconstructions)
-        print(reconstructions)
+        #print(reconstructions)
         reconstructions = (reconstructions * 255).astype(np.uint8)
-        print(reconstructions)
+        #print(reconstructions)
         reconstructions = Image.fromarray(reconstructions, "RGB")
         reconstructions.show()
 
@@ -282,10 +285,12 @@ class Classifier:
 
     def predict(self, image):
         return self.model(image)
-       
+
+    # Image Loader Module   
     def load_images(self):
         counter = 0
         for i in range(self.batch_size):
+            # Load the path of a random picture of a random category
             groups = list(self.paths.keys())
             group = random.choice(groups)
             imagePath = np.random.choice(self.paths[group])
@@ -323,13 +328,14 @@ class Classifier:
             self.batch_path.update({str(counter): imagePath})
             counter += 1
 
-
+    # Train selector, redirect the pointer to the right training function for that model
     def train(self,  number_of_epochs, number_of_batches, test_batch_size, trial = None):
         if self.type == "capsnet":
             self.train_capsNet(trial, number_of_epochs, number_of_batches, test_batch_size)
         elif self.type == "convpool":
             self.train_ConvPool(trial, number_of_epochs, number_of_batches, test_batch_size)
-
+    
+    # Training function for the Capsnet model
     def train_capsNet(self, trial,  number_of_epochs, number_of_batches, test_batch_size):
         print("Starting training on capsnet.")
         last_accuracy = 0
@@ -392,6 +398,7 @@ class Classifier:
         if(self.save):
             self.save_weights(last_accuracy)
 
+    # Training function for the Convpool model
     def train_ConvPool(self, trial, number_of_epochs, number_of_batches, test_batch_size):
         print("Starting training on convpool.")
         last_accuracy = 0
@@ -451,7 +458,7 @@ class Classifier:
         if(self.save):
             self.save_weights(last_accuracy)
 
-
+# Evaluation function, used in training functions and objective function for evaluating the model at a given time.
 def evaluation(Classifier, test_batch_size, prnt):
     paths = variables.test_set_paths_by_category        
     groups = list(paths.keys())
