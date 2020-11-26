@@ -50,7 +50,7 @@ class PrimaryCaps(nn.Module):
         return output_tensor
 
 
-class DigitCaps(nn.Module):
+class DigitCaps(nn.Module): # FlowerCaps
     def __init__(self, num_capsules=5, num_routes=32 * 20 * 20, in_channels=8, out_channels=16):
         super(DigitCaps, self).__init__()
 
@@ -93,7 +93,7 @@ class DigitCaps(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, input_width=224, input_height=224, input_channel=3):
+    def __init__(self, input_width=150, input_height=150, input_channel=3):
         super(Decoder, self).__init__()
         self.input_width = input_width
         self.input_height = input_height

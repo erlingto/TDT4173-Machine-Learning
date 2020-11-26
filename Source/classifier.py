@@ -8,6 +8,7 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import datasets, transforms
 import torch.optim as optim
 from imutils import paths
+from sklearn.metrics import confusion_matrix
 import cv2
 from PIL import Image
 #import glob
@@ -21,14 +22,30 @@ import variables
 import cnn_model
 import capsnet_model
 
+#remove
+import seaborn as sn
+
 USE_CUDA = True if torch.cuda.is_available() else False
 
 # Standardization Module.
 def standardize_image(image): 
-        image = transforms.ToTensor()(image) 
-        #calculated mean and standard deviation for whole dataset 
-        image = transforms.Normalize(mean=variables.mean, std=variables.std)(image)  
-        return image
+    image = transforms.ToTensor()(image) 
+    image = transforms.Normalize(mean=variables.mean, std=variables.std)(image) #calculated mean and standard deviation for whole dataset  
+    return image
+
+def destandardize_image(image_size, tensor):
+    mean = variables.mean
+    std = variables.std
+    tensor = tensor[0]
+    tmp = tensor.copy()
+    tmp = tmp.reshape(image_size[0], image_size[1], 3)
+    for i in range(3):
+        for x in range(image_size[0]):
+            for y in range(image_size[1]): 
+                tmp[x][y][i] = (tensor[i][x][y] * std[i]) + mean[i]
+                #tensor[i][x][y] = (tensor[i][x][y] * std[i]) + mean[i]
+
+    return tmp
 
 # Image Augmentation module, called in the Picture Loader Module. Each picture passes through this module and can 
     # be altered with one image augmentation technique.
@@ -152,7 +169,9 @@ class Classifier:
 
     #Deprecated in the latest build
     def view_image(self):
-
+        if self.type == "capsnet":
+            print("Model is not traditional CNN")
+            return
         # open an image, resize it and print it
         groups = list(self.paths.keys())
         group = random.choice(groups)
@@ -203,11 +222,49 @@ class Classifier:
         image = Image.fromarray(image[0][1], "RGB")
         image.show()
 
-    # Functions for plotting loss, cross validation
-    def plot_results(self):
+    def view_random_reconstruction(self):
+        if self.type == "ConvPool":
+            print("This model is not a Capsulenet, reconstruction is not available")
+        groups = list(self.paths.keys())
+        group = random.choice(groups)
+        imagePath = np.random.choice(self.paths[group])
+        im = Image.open(imagePath)
+        im.thumbnail(self.image_size, Image.ANTIALIAS)
+        im = np.array(im)
+        im = cv2.resize(im, self.image_size)
+        im = standardize_image(im)
+        im = im[None, :, :, :]
+        if self.cuda:
+            im = im.cuda().to(self.device)
+        output, reconstructions, masked = self.model(im)
+        prediction = torch.argmax(masked.data)
+        if prediction == 0:
+            prediction = "daisy"
+        if prediction == 1:
+            prediction = "dandelion"
+        if prediction == 2:
+            prediction = "rose"
+        if prediction == 3:
+            prediction = "sunflower"
+        if prediction == 4:
+            prediction = "tulip"
+        
+        print("model prediction:", prediction)
+        print("actual class:", group )
+        if self.cuda:
+            reconstructions = reconstructions.cpu()
+        reconstructions = reconstructions.detach().clone().numpy()
+        reconstructions = destandardize_image(self.image_size, reconstructions)
+        print(reconstructions)
+        reconstructions = (reconstructions * 255).astype(np.uint8)
+        print(reconstructions)
+        reconstructions = Image.fromarray(reconstructions, "RGB")
+        reconstructions.show()
 
-        return None
+        image = Image.open(imagePath)
+        image.show()
 
+        
     def reset_epoch(self):
         self.paths = variables.train_set_paths_by_category
 
@@ -409,6 +466,8 @@ def evaluation(Classifier, test_batch_size, prnt):
     batch_images = {}
     batch_labels = {}
     error_results = {}
+    predictions = []
+    labels = []
     for group in groups:
         for i in range(test_batch_size):
             imagePath = paths[group][i]
@@ -437,11 +496,13 @@ def evaluation(Classifier, test_batch_size, prnt):
 
             batch_images.update({str(counter): im})
             batch_labels.update({str(counter): label})
-
+            labels.append(group)
             counter += 1
 
     correct = 0
     total = 0
+    
+   
 
     errors = np.zeros(5)
     for i in range(test_batch_size*5):
@@ -474,6 +535,18 @@ def evaluation(Classifier, test_batch_size, prnt):
                 errors[4] += 1
                 error_results.update({("tulip" + str(errors[4])): output})
 
+        if predicted == 0:
+            prediction = "daisy"
+        elif predicted  == 1:
+            prediction = "dandelion"
+        elif predicted  == 2:
+            prediction = "rose"
+        elif predicted  == 3:
+            prediction = "sunflower"
+        elif predicted  == 4:
+            prediction = "tulip"
+
+        predictions.append(prediction)
         total += 1
     accuracy = correct/total
     print("Cross validation:", accuracy)
@@ -487,5 +560,14 @@ def evaluation(Classifier, test_batch_size, prnt):
         print("-----------------------ERRORS-----------------------")
         for error in error_results:
             print(error, ":", error_results[error])
+        classes = ["daisy", "dandelion", "rose", "sunflower", "tulip"]
+        cm = confusion_matrix(labels, predictions, labels=classes)
+
+        plt.figure(figsize = (5,5))
+        sn.set(font_scale=1.4)
+        sn.heatmap(cm, annot=True, xticklabels = classes,  yticklabels=classes, annot_kws={"size": 16}, fmt='d')
+        plt.show()
+        # NOTE: Fill all variables here with default values of the plot_confusion_matrix
+    
     # Returning accuracy for tuning of the model
     return accuracy
