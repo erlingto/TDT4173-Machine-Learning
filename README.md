@@ -1,7 +1,8 @@
 # TDT4137 Machine Learning
 
 ## Project Description
-This is the main project of the NTNU course TDT4137 - Machine Learning.
+This is the main project of the NTNU course TDT4137 - Machine Learning. The paper regarding this project can be found [here.](http://folk.ntnu.no/emanueca/TDT4173_project__group_7.pdf)
+
 The purpose of this project is to compare classic Convolutional Neural Network (CNN or convpool in this project) to the new Capsule neural network (Capsnet) on the same dataset.
 We developed a program with our implementation of CNN based and an adaptation of a Capsnet implementation, both based on the Pythorch framework.
 The original Capsnet implementation (All rights to jindongwang) can be found here: https://github.com/jindongwang/Pytorch-CapsuleNet
@@ -11,8 +12,6 @@ The runtime of this project is configurable by choosing witch classifier utilize
 Both the implementations supports the use of a CUDA enabled graphic card for speeding up calculations on both modes.
 
 ### Models
-A 
-
 If not specified, the program will create or load a "convpool" model. In the user guide is shown how to customize the runtime of the program with parameters.
 Some pre-trained models can be loaded in the program for evaluation purposes. Due to the high size, you can download it [from this link](https://drive.google.com/drive/folders/1gg7o8Hry2iGaw366ISvkLrzHmiLmEqbw?usp=sharing) and place it in the project root. More instructions follows the download.
 
