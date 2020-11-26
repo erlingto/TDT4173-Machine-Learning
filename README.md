@@ -105,6 +105,7 @@ capsnet_cfg = {
 The variables used when conduct a study are found under the "objective" function in the "paramstudy.py" file.
 It utilizes a Optuna.trial.trial object that, for each study, will suggest parameters out of the value range manually defined in the cfg object.
 There are different "suggest" methods with different values distributions. Documentation is found here: https://optuna.readthedocs.io/en/stable/reference/generated/optuna.trial.Trial.html
+Results of the conducted study can be found under Results\Study\csv. A dump of the "study" object is found in Results\study, usefull for future analisis or fuctionality implementation.
 Documentation 
 ```
 paramstudy.py
@@ -148,6 +149,12 @@ Root
 |
 |
 |__Results
+   |
+   |__Plots
+   |  |
+   |  |__capsnet
+   |  |
+   |  |__convpool
    |
    |__Study
       |
