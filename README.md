@@ -2,24 +2,31 @@
 
 ## Project Description
 This is the main project of the NTNU course TDT4137 - Machine Learning.
-The purpose of this project is to compare classic Convolutional Neural Network (CNN) to the new Capsule neural network (Capsnet) on the same dataset.
+The purpose of this project is to compare classic Convolutional Neural Network (CNN or convpool in this project) to the new Capsule neural network (Capsnet) on the same dataset.
 We developed a program with our implementation of CNN based and an adaptation of a Capsnet implementation, both based on the Pythorch framework.
 The original Capsnet implementation (All rights to jindongwang) can be found here: https://github.com/jindongwang/Pytorch-CapsuleNet
 Modules for Image Augmentation and Standardization of the dataset are also implemented in this project.
 
-The runtime of this project is configurable by choosing witch classifier utilize (CNN or Capsnet) and a mode between "train and evaluate" or "conduct a study".
+The runtime of this project is configurable by choosing witch classifier utilize (convpool or capsnet) and a mode between "train and evaluate" or "conduct a study".
 Both the implementations supports the use of a CUDA enabled graphic card for speeding up calculations on both modes.
 
+### Models
+A 
 
-### Train and Evaluate
+If not specified, the program will create or load a "convpool" model. In the user guide is shown how to customize the runtime of the program with parameters.
+Some pre-trained models can be loaded in the program for evaluation purposes. Due to the high size, you can download it [from this link](https://drive.google.com/drive/folders/1EGAMN5IUjCIAX7SfmnecB9kryGvJJiMQ?usp=sharing) and place it in the project root. More instructions follows the download.
+
+### "Train and Evaluate" mode
 In this mode, the program will train the selected model on the whished parameters. The program gives the possibility to save and load trained classifier weights. There are options for plotting statistics about the training prosess like the loss plot per epoch. 
-The program then proceedes to evaluate the model.
+The program then proceedes to evaluate the model [here](https://github.com/erlingto/TDT4173-Machine-Learning/blob/438386a52c396dfe8b8d47f246b47e9e452b67a9/Source/classifier.py#L455).
 The training phase can be skipped, in that case the program will only evaluate the model.
+Training of the model is conducted by [this](https://github.com/erlingto/TDT4173-Machine-Learning/blob/438386a52c396dfe8b8d47f246b47e9e452b67a9/Source/classifier.py#L327) function that redirects the program to the right training routine for [capsnet](https://github.com/erlingto/TDT4173-Machine-Learning/blob/438386a52c396dfe8b8d47f246b47e9e452b67a9/Source/classifier.py#L333) and [convpool](https://github.com/erlingto/TDT4173-Machine-Learning/blob/438386a52c396dfe8b8d47f246b47e9e452b67a9/Source/classifier.py#L395).
 
-### Conduct a study 
+### "Conduct a study" mode 
 In this mode, the program will conduct a study on the selected classifier for finding the best hyperparameters. Both the number of trials and hyperparameters' value range is configurable.
 A study is then saved as a CSV file and as a object dump. Graphs are generating visualising importance of each hyperparameter in the final score, trial-score and a empirical distribution of all the results. 
-During a study, the program can early prune a non promising trial for time optimization of the study.
+
+This mode is implemented in [Source\paramstudy.py](https://github.com/erlingto/TDT4173-Machine-Learning/blob/438386a52c396dfe8b8d47f246b47e9e452b67a9/Source/paramstudy.py), where the [conduct_study(n_trials, classifier_type)](https://github.com/erlingto/TDT4173-Machine-Learning/blob/438386a52c396dfe8b8d47f246b47e9e452b67a9/Source/paramstudy.py#L55) will start a new study and initializate a model with the configuration found on the top of the file. Then it procedes by iterate through the [objective(trial)](https://github.com/erlingto/TDT4173-Machine-Learning/blob/438386a52c396dfe8b8d47f246b47e9e452b67a9/Source/paramstudy.py#L20) function that will fully train the model with the passed values, evaluated and saved in the study object. Since the program evaluate the model after each training epoch, a non promising trial can be pruned for time optimization.
 Parameter optimalization is implemented with the Optuna library, documentation can be found here: https://optuna.readthedocs.io/en/stable/
 
 ### Dataset
@@ -59,7 +66,7 @@ Run "main.py" for starting the program. The "main.py" script accepts the followi
 ### Some examples of use:
 
 * "**python main.py --train True**". This will run the program in "Train and Evaluate" mode on the "convpool" model without either skipping training nor loading weights. 
-* "**python main.py --model convpool --load_weights GDRHSD_capsnett_accuracy_0.49.weights **". The program will load the weigts of a previously trained "capsnet" model and will evaluate on it without training it first.
+* "**python main.py --model convpool --load_weights GDRHSD_capsnett_accuracy_0.49.weights**". The program will load the weigts of a previously trained "capsnet" model and will evaluate on it without training it first.
 * "**python main.py --study True --n_trials 100**". With this command, the program will then conduct a study with 100 trials on a convpool model.
 
 ### Variables
