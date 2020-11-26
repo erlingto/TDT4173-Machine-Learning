@@ -255,9 +255,9 @@ class Classifier:
             reconstructions = reconstructions.cpu()
         reconstructions = reconstructions.detach().clone().numpy()
         reconstructions = destandardize_image(self.image_size, reconstructions)
-        print(reconstructions)
+        #print(reconstructions)
         reconstructions = (reconstructions * 255).astype(np.uint8)
-        print(reconstructions)
+        #print(reconstructions)
         reconstructions = Image.fromarray(reconstructions, "RGB")
         reconstructions.show()
 

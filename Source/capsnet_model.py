@@ -40,7 +40,7 @@ class PrimaryCaps(nn.Module):
     def forward(self, x):
         u = [capsule(x) for capsule in self.capsules]
         u = torch.stack(u, dim=1)
-        print(u.size())
+        #print(u.size())
         u = u.view(x.size(0), self.num_routes, -1)
         return self.squash(u)
 
